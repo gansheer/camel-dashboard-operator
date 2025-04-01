@@ -20,8 +20,8 @@ limitations under the License.
 package applyconfiguration
 
 import (
-	v1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1"
-	camelv1 "github.com/squakez/camel-dashboard-operator/pkg/client/camel/applyconfiguration/camel/v1"
+	v1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
+	camelv1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/client/camel/applyconfiguration/camel/v1alpha1"
 	internal "github.com/squakez/camel-dashboard-operator/pkg/client/camel/applyconfiguration/internal"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -32,11 +32,11 @@ import (
 // apply configuration type exists for the given GroupVersionKind.
 func ForKind(kind schema.GroupVersionKind) interface{} {
 	switch kind {
-	// Group=camel.apache.org, Version=v1
-	case v1.SchemeGroupVersion.WithKind("Integration"):
-		return &camelv1.IntegrationApplyConfiguration{}
-	case v1.SchemeGroupVersion.WithKind("IntegrationStatus"):
-		return &camelv1.IntegrationStatusApplyConfiguration{}
+	// Group=camel.apache.org, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithKind("App"):
+		return &camelv1alpha1.AppApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("AppStatus"):
+		return &camelv1alpha1.AppStatusApplyConfiguration{}
 
 	}
 	return nil

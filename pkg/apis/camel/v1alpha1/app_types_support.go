@@ -15,30 +15,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
-	// IntegrationLabel is used to tag k8s object created by a given Integration.
-	IntegrationLabel = "camel.apache.org/integration"
-	// IntegrationGenerationLabel is used to check on outdated integration resources that can be removed by garbage collection.
-	IntegrationGenerationLabel = "camel.apache.org/generation"
-	// IntegrationSyntheticLabel is used to tag k8s synthetic Integrations.
-	IntegrationSyntheticLabel = "camel.apache.org/is-synthetic"
-	// IntegrationImportedKindLabel specifies from what kind of resource an Integration was imported.
-	IntegrationImportedKindLabel = "camel.apache.org/imported-from-kind"
-	// IntegrationImportedNameLabel specifies from what resource an Integration was imported.
-	IntegrationImportedNameLabel = "camel.apache.org/imported-from-name"
-
-	// IntegrationFlowEmbeddedSourceName --.
-	IntegrationFlowEmbeddedSourceName = "camel-k-embedded-flow.yaml"
+	// AppLabel is used to tag k8s object created by a given Camel Application.
+	AppLabel = "camel.apache.org/app"
+	// AppSyntheticLabel is used to tag k8s synthetic Camel Applications.
+	AppSyntheticLabel = "camel.apache.org/is-synthetic"
+	// AppImportedKindLabel specifies from what kind of resource an App was imported.
+	AppImportedKindLabel = "camel.apache.org/imported-from-kind"
+	// AppImportedNameLabel specifies from what resource an App was imported.
+	AppImportedNameLabel = "camel.apache.org/imported-from-name"
 )
 
-func NewIntegration(namespace string, name string) Integration {
-	return Integration{
+func NewApp(namespace string, name string) App {
+	return App{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: SchemeGroupVersion.String(),
 			Kind:       IntegrationKind,
@@ -50,8 +45,8 @@ func NewIntegration(namespace string, name string) Integration {
 	}
 }
 
-func NewIntegrationList() IntegrationList {
-	return IntegrationList{
+func NewAppList() AppList {
+	return AppList{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: SchemeGroupVersion.String(),
 			Kind:       IntegrationKind,

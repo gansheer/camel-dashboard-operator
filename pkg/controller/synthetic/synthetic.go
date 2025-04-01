@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"reflect"
 
-	v1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1"
+	v1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
 	"github.com/squakez/camel-dashboard-operator/pkg/platform"
 	"github.com/squakez/camel-dashboard-operator/pkg/util/kubernetes"
@@ -60,9 +60,6 @@ func ManageSyntheticIntegrations(ctx context.Context, c client.Client, cache cac
 					log.Error(fmt.Errorf("type assertion failed: %v", obj), "Failed to retrieve Object on add event")
 					return
 				}
-				if isManagedObject(ctrlObj) {
-					return
-				}
 
 				onAdd(ctx, c, ctrlObj)
 			},
@@ -70,9 +67,6 @@ func ManageSyntheticIntegrations(ctx context.Context, c client.Client, cache cac
 				ctrlObj, ok := obj.(ctrl.Object)
 				if !ok {
 					log.Errorf(fmt.Errorf("type assertion failed: %v", obj), "Failed to retrieve Object on delete event")
-					return
-				}
-				if isManagedObject(ctrlObj) {
 					return
 				}
 
@@ -91,7 +85,7 @@ func ManageSyntheticIntegrations(ctx context.Context, c client.Client, cache cac
 //
 //nolint:nestif
 func onAdd(ctx context.Context, c client.Client, ctrlObj ctrl.Object) {
-	integrationName := ctrlObj.GetLabels()[v1.IntegrationLabel]
+	integrationName := ctrlObj.GetLabels()[v1alpha1.AppLabel]
 	it, err := getSyntheticIntegration(ctx, c, ctrlObj.GetNamespace(), integrationName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
@@ -116,7 +110,7 @@ func onAdd(ctx context.Context, c client.Client, ctrlObj ctrl.Object) {
 }
 
 func onDelete(ctx context.Context, c client.Client, ctrlObj ctrl.Object) {
-	integrationName := ctrlObj.GetLabels()[v1.IntegrationLabel]
+	integrationName := ctrlObj.GetLabels()[v1alpha1.AppLabel]
 	// Importing label removed
 	if err := deleteSyntheticIntegration(ctx, c, ctrlObj.GetNamespace(), integrationName); err != nil {
 		log.Errorf(err, "Some error happened while deleting a synthetic Integration %s", integrationName)
@@ -152,37 +146,26 @@ func getInformers(ctx context.Context, cl client.Client, c cache.Cache) ([]cache
 	return informers, nil
 }
 
-func getSyntheticIntegration(ctx context.Context, c client.Client, namespace, name string) (*v1.Integration, error) {
-	it := v1.NewIntegration(namespace, name)
+func getSyntheticIntegration(ctx context.Context, c client.Client, namespace, name string) (*v1alpha1.App, error) {
+	it := v1alpha1.NewApp(namespace, name)
 	err := c.Get(ctx, ctrl.ObjectKeyFromObject(&it), &it)
 	return &it, err
 }
 
-func createSyntheticIntegration(ctx context.Context, c client.Client, it *v1.Integration) error {
+func createSyntheticIntegration(ctx context.Context, c client.Client, it *v1alpha1.App) error {
 	return c.Create(ctx, it, ctrl.FieldOwner("camel-k-operator"))
 }
 
 func deleteSyntheticIntegration(ctx context.Context, c client.Client, namespace, name string) error {
 	// As the Integration label was removed, we don't know which is the Synthetic integration to remove
-	it := v1.NewIntegration(namespace, name)
+	it := v1alpha1.NewApp(namespace, name)
 	return c.Delete(ctx, &it)
-}
-
-// isManagedObject returns true if the object is managed by an Integration.
-func isManagedObject(obj ctrl.Object) bool {
-	for _, mr := range obj.GetOwnerReferences() {
-		if mr.APIVersion == "camel.apache.org/v1" &&
-			mr.Kind == "Integration" {
-			return true
-		}
-	}
-	return false
 }
 
 // nonManagedCamelApplicationAdapter represents a Camel application built and deployed outside the operator lifecycle.
 type nonManagedCamelApplicationAdapter interface {
 	// Integration return an Integration resource fed by the Camel application adapter.
-	Integration() *v1.Integration
+	Integration() *v1alpha1.App
 }
 
 func nonManagedCamelApplicationFactory(obj ctrl.Object) (nonManagedCamelApplicationAdapter, error) {
@@ -207,12 +190,12 @@ type nonManagedCamelDeployment struct {
 }
 
 // Integration return an Integration resource fed by the Camel application adapter.
-func (app *nonManagedCamelDeployment) Integration() *v1.Integration {
-	it := v1.NewIntegration(app.deploy.Namespace, app.deploy.Labels[v1.IntegrationLabel])
+func (app *nonManagedCamelDeployment) Integration() *v1alpha1.App {
+	it := v1alpha1.NewApp(app.deploy.Namespace, app.deploy.Labels[v1alpha1.AppLabel])
 	it.SetAnnotations(map[string]string{
-		v1.IntegrationImportedNameLabel: app.deploy.Name,
-		v1.IntegrationImportedKindLabel: "Deployment",
-		v1.IntegrationSyntheticLabel:    "true",
+		v1alpha1.AppImportedNameLabel: app.deploy.Name,
+		v1alpha1.AppImportedKindLabel: "Deployment",
+		v1alpha1.AppSyntheticLabel:    "true",
 	})
 	references := []metav1.OwnerReference{
 		{
@@ -248,12 +231,12 @@ type NonManagedCamelCronjob struct {
 }
 
 // Integration return an Integration resource fed by the Camel application adapter.
-func (app *NonManagedCamelCronjob) Integration() *v1.Integration {
-	it := v1.NewIntegration(app.cron.Namespace, app.cron.Labels[v1.IntegrationLabel])
+func (app *NonManagedCamelCronjob) Integration() *v1alpha1.App {
+	it := v1alpha1.NewApp(app.cron.Namespace, app.cron.Labels[v1alpha1.AppLabel])
 	it.SetAnnotations(map[string]string{
-		v1.IntegrationImportedNameLabel: app.cron.Name,
-		v1.IntegrationImportedKindLabel: "CronJob",
-		v1.IntegrationSyntheticLabel:    "true",
+		v1alpha1.AppImportedNameLabel: app.cron.Name,
+		v1alpha1.AppImportedKindLabel: "CronJob",
+		v1alpha1.AppSyntheticLabel:    "true",
 	})
 	references := []metav1.OwnerReference{
 		{
@@ -274,12 +257,12 @@ type NonManagedCamelKnativeService struct {
 }
 
 // Integration return an Integration resource fed by the Camel application adapter.
-func (app *NonManagedCamelKnativeService) Integration() *v1.Integration {
-	it := v1.NewIntegration(app.ksvc.Namespace, app.ksvc.Labels[v1.IntegrationLabel])
+func (app *NonManagedCamelKnativeService) Integration() *v1alpha1.App {
+	it := v1alpha1.NewApp(app.ksvc.Namespace, app.ksvc.Labels[v1alpha1.AppLabel])
 	it.SetAnnotations(map[string]string{
-		v1.IntegrationImportedNameLabel: app.ksvc.Name,
-		v1.IntegrationImportedKindLabel: "KnativeService",
-		v1.IntegrationSyntheticLabel:    "true",
+		v1alpha1.AppImportedNameLabel: app.ksvc.Name,
+		v1alpha1.AppImportedKindLabel: "KnativeService",
+		v1alpha1.AppSyntheticLabel:    "true",
 	})
 	references := []metav1.OwnerReference{
 		{

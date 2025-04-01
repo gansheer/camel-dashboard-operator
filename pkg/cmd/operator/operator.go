@@ -54,7 +54,7 @@ import (
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 
 	"github.com/squakez/camel-dashboard-operator/pkg/apis"
-	v1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1"
+	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
 	"github.com/squakez/camel-dashboard-operator/pkg/controller"
 	"github.com/squakez/camel-dashboard-operator/pkg/controller/synthetic"
@@ -164,7 +164,7 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 		log.Info("Leader election is disabled!")
 	}
 
-	hasIntegrationLabel, err := labels.NewRequirement(v1.IntegrationLabel, selection.Exists, []string{})
+	hasIntegrationLabel, err := labels.NewRequirement(v1alpha1.AppLabel, selection.Exists, []string{})
 	exitOnError(err, "cannot create Integration label selector")
 	labelsSelector := labels.NewSelector().Add(*hasIntegrationLabel)
 

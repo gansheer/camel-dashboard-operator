@@ -28,18 +28,18 @@ spec:
     categories:
     - kamel
     - camel
-    kind: Integration
-    listKind: IntegrationList
+    kind: App
+    listKind: AppList
     plural: integrations
     shortNames:
     - it
-    singular: integration
+    singular: app
   scope: Namespaced
   versions:
-  - name: v1
+  - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Integration is the Schema for the integrations API.
+        description: App is the Schema for the integrations API.
         properties:
           apiVersion:
             description: |-

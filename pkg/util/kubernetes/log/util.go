@@ -24,15 +24,15 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
-	v1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1"
+	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 // Print prints integrations logs to the stdout.
-func Print(ctx context.Context, cmd *cobra.Command, client kubernetes.Interface, integration *v1.Integration, tailLines *int64, out io.Writer) error {
-	return PrintUsingSelector(ctx, cmd, client, integration.Namespace, integration.Name, v1.IntegrationLabel+"="+integration.Name, tailLines, out)
+func Print(ctx context.Context, cmd *cobra.Command, client kubernetes.Interface, integration *v1alpha1.App, tailLines *int64, out io.Writer) error {
+	return PrintUsingSelector(ctx, cmd, client, integration.Namespace, integration.Name, v1alpha1.AppLabel+"="+integration.Name, tailLines, out)
 }
 
 // PrintUsingSelector prints pod logs using a selector.

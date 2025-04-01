@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,36 +35,36 @@ const (
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
 
-// Integration is the Schema for the integrations API.
-type Integration struct {
+// App is the Schema for the integrations API.
+type App struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	// the desired Integration specification
-	Spec IntegrationSpec `json:"spec,omitempty"`
+	Spec AppSpec `json:"spec,omitempty"`
 	// the status of the Integration
-	Status IntegrationStatus `json:"status,omitempty"`
+	Status AppStatus `json:"status,omitempty"`
 }
 
-// IntegrationSpec specifies the configuration of an Integration.
+// AppSpec specifies the configuration of an Integration.
 // The Integration will be watched by the operator which will be in charge to run the related application, according to the configuration specified.
-type IntegrationSpec struct {
+type AppSpec struct {
 }
 
-// IntegrationStatus defines the observed state of Integration.
-type IntegrationStatus struct {
+// AppStatus defines the observed state of Integration.
+type AppStatus struct {
 	// the actual phase
-	Phase IntegrationPhase `json:"phase,omitempty"`
+	Phase AppPhase `json:"phase,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 
-// IntegrationList contains a list of Integration.
-type IntegrationList struct {
+// AppList contains a list of Integration.
+type AppList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Integration `json:"items"`
+	Items           []App `json:"items"`
 }
 
-// IntegrationPhase --.
-type IntegrationPhase string
+// AppPhase --.
+type AppPhase string

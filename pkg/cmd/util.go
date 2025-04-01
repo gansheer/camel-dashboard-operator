@@ -18,7 +18,6 @@ limitations under the License.
 package cmd
 
 import (
-	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -31,31 +30,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	v1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1"
-	"github.com/squakez/camel-dashboard-operator/pkg/client"
 
 	p "github.com/gertd/go-pluralize"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
 	offlineCommandLabel = "camel.apache.org/cmd.offline"
 )
-
-// DeleteIntegration --.
-func DeleteIntegration(ctx context.Context, c client.Client, name string, namespace string) error {
-	integration := v1.Integration{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       v1.IntegrationKind,
-			APIVersion: v1.SchemeGroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      name,
-		},
-	}
-	return c.Delete(ctx, &integration)
-}
 
 func bindPFlagsHierarchy(cmd *cobra.Command, v *viper.Viper) error {
 	for _, c := range cmd.Commands() {

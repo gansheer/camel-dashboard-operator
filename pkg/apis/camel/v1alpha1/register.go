@@ -20,7 +20,7 @@ limitations under the License.
 // Package v1 contains API Schema definitions for the camel v1 API group
 // +kubebuilder:object:generate=true
 // +groupName=camel.apache.org
-package v1
+package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,7 +47,7 @@ func Resource(resource string) schema.GroupResource {
 // Adds the list of known types to Scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&Integration{},
+		&App{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

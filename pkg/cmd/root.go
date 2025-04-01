@@ -29,7 +29,6 @@ import (
 	"golang.org/x/term"
 
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
-	v1 "github.com/squakez/camel-dashboard-operator/pkg/client/camel/clientset/versioned/typed/camel/v1"
 )
 
 const kamelCommandLongDescription = `Apache Camel K is a lightweight integration platform, born on Kubernetes, with serverless
@@ -179,15 +178,6 @@ func (command *RootCmdOptions) GetCmdClient() (client.Client, error) {
 	var err error
 	command._client, err = command.NewCmdClient()
 	return command._client, err
-}
-
-// GetCamelCmdClient returns a client to access the Camel resources.
-func (command *RootCmdOptions) GetCamelCmdClient() (*v1.CamelV1Client, error) {
-	c, err := command.GetCmdClient()
-	if err != nil {
-		return nil, err
-	}
-	return v1.NewForConfig(c.GetConfig())
 }
 
 // NewCmdClient returns a new client that can be used from command line tools.

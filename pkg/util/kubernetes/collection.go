@@ -33,8 +33,6 @@ import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	routev1 "github.com/openshift/api/route/v1"
-
-	v1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1"
 )
 
 // A Collection is a container of Kubernetes resources.
@@ -129,17 +127,6 @@ func (c *Collection) GetDeployment(filter func(*appsv1.Deployment) bool) *appsv1
 		}
 	})
 	return retValue
-}
-
-// GetDeploymentForIntegration returns a Deployment for the given integration.
-func (c *Collection) GetDeploymentForIntegration(integration *v1.Integration) *appsv1.Deployment {
-	if integration == nil {
-		return nil
-	}
-
-	return c.GetDeployment(func(d *appsv1.Deployment) bool {
-		return d.ObjectMeta.Labels[v1.IntegrationLabel] == integration.Name
-	})
 }
 
 // HasDeployment returns true if a deployment matching the given condition is present.
@@ -243,16 +230,6 @@ func (c *Collection) GetService(filter func(*corev1.Service) bool) *corev1.Servi
 		}
 	})
 	return retValue
-}
-
-// GetServiceForIntegration returns a user Service for the given integration.
-func (c *Collection) GetServiceForIntegration(integration *v1.Integration) *corev1.Service {
-	if integration == nil {
-		return nil
-	}
-	return c.GetService(func(s *corev1.Service) bool {
-		return s.ObjectMeta.Labels != nil && s.ObjectMeta.Labels[v1.IntegrationLabel] == integration.Name
-	})
 }
 
 // GetKnativeService returns a Knative Service that matches the given function.

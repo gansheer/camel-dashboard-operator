@@ -43,9 +43,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/squakez/camel-dashboard-operator/pkg/apis"
-	v1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1"
+	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	camel "github.com/squakez/camel-dashboard-operator/pkg/client/camel/clientset/versioned"
-	camelv1 "github.com/squakez/camel-dashboard-operator/pkg/client/camel/clientset/versioned/typed/camel/v1"
+	camelv1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/client/camel/clientset/versioned/typed/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/util"
 )
 
@@ -60,7 +60,7 @@ var newClientMutex sync.Mutex
 type Client interface {
 	ctrl.Client
 	kubernetes.Interface
-	CamelV1() camelv1.CamelV1Interface
+	CamelV1alpha1() camelv1alpha1.CamelV1alpha1Interface
 	GetScheme() *runtime.Scheme
 	GetConfig() *rest.Config
 	GetCurrentNamespace(kubeConfig string) (string, error)
@@ -89,8 +89,8 @@ type defaultClient struct {
 // Check interface compliance.
 var _ Client = &defaultClient{}
 
-func (c *defaultClient) CamelV1() camelv1.CamelV1Interface {
-	return c.camel.CamelV1()
+func (c *defaultClient) CamelV1alpha1() camelv1alpha1.CamelV1alpha1Interface {
+	return c.camel.CamelV1alpha1()
 }
 
 func (c *defaultClient) GetScheme() *runtime.Scheme {
@@ -132,7 +132,7 @@ func NewClientWithConfig(fastDiscovery bool, cfg *rest.Config) (Client, error) {
 
 	var err error
 	clientScheme := scheme.Scheme
-	if !clientScheme.IsVersionRegistered(v1.SchemeGroupVersion) {
+	if !clientScheme.IsVersionRegistered(v1alpha1.SchemeGroupVersion) {
 		// Setup Scheme for all resources
 		err = apis.AddToScheme(clientScheme)
 		if err != nil {

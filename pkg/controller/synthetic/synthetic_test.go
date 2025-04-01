@@ -26,8 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 
-	v1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1"
-
+	v1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,7 +41,7 @@ func TestNonManagedUnsupported(t *testing.T) {
 			Namespace: "ns",
 			Name:      "my-pod",
 			Labels: map[string]string{
-				v1.IntegrationLabel: "my-imported-it",
+				v1.AppLabel: "my-imported-it",
 			},
 		},
 		Spec: corev1.PodSpec{
@@ -80,14 +79,14 @@ func TestNonManagedDeployment(t *testing.T) {
 			Namespace: "ns",
 			Name:      "my-deploy",
 			Labels: map[string]string{
-				v1.IntegrationLabel: "my-imported-it",
+				v1.AppLabel: "my-imported-it",
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						v1.IntegrationLabel: "my-imported-it",
+						v1.AppLabel: "my-imported-it",
 					},
 				},
 				Spec: corev1.PodSpec{
@@ -102,11 +101,11 @@ func TestNonManagedDeployment(t *testing.T) {
 		},
 	}
 
-	expectedIt := v1.NewIntegration("ns", "my-imported-it")
+	expectedIt := v1.NewApp("ns", "my-imported-it")
 	expectedIt.SetAnnotations(map[string]string{
-		v1.IntegrationImportedNameLabel: "my-deploy",
-		v1.IntegrationImportedKindLabel: "Deployment",
-		v1.IntegrationSyntheticLabel:    "true",
+		v1.AppImportedNameLabel: "my-deploy",
+		v1.AppImportedKindLabel: "Deployment",
+		v1.AppSyntheticLabel:    "true",
 	})
 	references := []metav1.OwnerReference{
 		{
@@ -135,7 +134,7 @@ func TestNonManagedCronJob(t *testing.T) {
 			Namespace: "ns",
 			Name:      "my-cron",
 			Labels: map[string]string{
-				v1.IntegrationLabel: "my-imported-it",
+				v1.AppLabel: "my-imported-it",
 			},
 		},
 		Spec: batchv1.CronJobSpec{
@@ -144,7 +143,7 @@ func TestNonManagedCronJob(t *testing.T) {
 					Template: corev1.PodTemplateSpec{
 						ObjectMeta: metav1.ObjectMeta{
 							Labels: map[string]string{
-								v1.IntegrationLabel: "my-imported-it",
+								v1.AppLabel: "my-imported-it",
 							},
 						},
 						Spec: corev1.PodSpec{
@@ -161,11 +160,11 @@ func TestNonManagedCronJob(t *testing.T) {
 		},
 	}
 
-	expectedIt := v1.NewIntegration("ns", "my-imported-it")
+	expectedIt := v1.NewApp("ns", "my-imported-it")
 	expectedIt.SetAnnotations(map[string]string{
-		v1.IntegrationImportedNameLabel: "my-cron",
-		v1.IntegrationImportedKindLabel: "CronJob",
-		v1.IntegrationSyntheticLabel:    "true",
+		v1.AppImportedNameLabel: "my-cron",
+		v1.AppImportedKindLabel: "CronJob",
+		v1.AppSyntheticLabel:    "true",
 	})
 	references := []metav1.OwnerReference{
 		{
@@ -193,7 +192,7 @@ func TestNonManagedKnativeService(t *testing.T) {
 			Namespace: "ns",
 			Name:      "my-ksvc",
 			Labels: map[string]string{
-				v1.IntegrationLabel: "my-imported-it",
+				v1.AppLabel: "my-imported-it",
 			},
 		},
 		Spec: servingv1.ServiceSpec{
@@ -201,7 +200,7 @@ func TestNonManagedKnativeService(t *testing.T) {
 				Template: servingv1.RevisionTemplateSpec{
 					ObjectMeta: metav1.ObjectMeta{
 						Labels: map[string]string{
-							v1.IntegrationLabel: "my-imported-it",
+							v1.AppLabel: "my-imported-it",
 						},
 					},
 					Spec: servingv1.RevisionSpec{
@@ -219,11 +218,11 @@ func TestNonManagedKnativeService(t *testing.T) {
 		},
 	}
 
-	expectedIt := v1.NewIntegration("ns", "my-imported-it")
+	expectedIt := v1.NewApp("ns", "my-imported-it")
 	expectedIt.SetAnnotations(map[string]string{
-		v1.IntegrationImportedNameLabel: "my-ksvc",
-		v1.IntegrationImportedKindLabel: "KnativeService",
-		v1.IntegrationSyntheticLabel:    "true",
+		v1.AppImportedNameLabel: "my-ksvc",
+		v1.AppImportedKindLabel: "KnativeService",
+		v1.AppSyntheticLabel:    "true",
 	})
 	references := []metav1.OwnerReference{
 		{

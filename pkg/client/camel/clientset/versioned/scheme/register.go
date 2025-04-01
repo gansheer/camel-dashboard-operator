@@ -20,7 +20,7 @@ limitations under the License.
 package scheme
 
 import (
-	camelv1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1"
+	camelv1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -32,7 +32,7 @@ var Scheme = runtime.NewScheme()
 var Codecs = serializer.NewCodecFactory(Scheme)
 var ParameterCodec = runtime.NewParameterCodec(Scheme)
 var localSchemeBuilder = runtime.SchemeBuilder{
-	camelv1.AddToScheme,
+	camelv1alpha1.AddToScheme,
 }
 
 // AddToScheme adds all types of this clientset into the given scheme. This allows composition

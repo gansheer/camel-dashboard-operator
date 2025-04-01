@@ -1,14 +1,14 @@
-[#_camel_apache_org_v1]
-== camel.apache.org/v1
+[#_camel_apache_org_v1alpha1]
+== camel.apache.org/v1alpha1
 
 Package v1 contains API Schema definitions for the camel v1 API group
 
 ==  Resource Types
 
-[#_camel_apache_org_v1_Integration]
-=== Integration
+[#_camel_apache_org_v1alpha1_App]
+=== App
 
-Integration is the Schema for the integrations API.
+App is the Schema for the integrations API.
 
 [cols="2,2a",options="header"]
 |===
@@ -17,11 +17,11 @@ Integration is the Schema for the integrations API.
 
 |`apiVersion` +
 string
-|`camel.apache.org/v1`
+|`camel.apache.org/v1alpha1`
 
 |`kind` +
 string
-|`Integration`
+|`App`
 |`metadata` +
 *https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta[Kubernetes meta/v1.ObjectMeta]*
 |
@@ -31,14 +31,14 @@ string
 
 Refer to the Kubernetes API documentation for the fields of the `metadata` field.
 |`spec` +
-*xref:#_camel_apache_org_v1_IntegrationSpec[IntegrationSpec]*
+*xref:#_camel_apache_org_v1alpha1_AppSpec[AppSpec]*
 |
 
 
 the desired Integration specification
 
 |`status` +
-*xref:#_camel_apache_org_v1_IntegrationStatus[IntegrationStatus]*
+*xref:#_camel_apache_org_v1alpha1_AppStatus[AppStatus]*
 |
 
 
@@ -49,35 +49,35 @@ the status of the Integration
 
 == Internal Types
 
-[#_camel_apache_org_v1_IntegrationPhase]
-=== IntegrationPhase(`string` alias)
+[#_camel_apache_org_v1alpha1_AppPhase]
+=== AppPhase(`string` alias)
 
 *Appears on:*
 
-* <<#_camel_apache_org_v1_IntegrationStatus, IntegrationStatus>>
+* <<#_camel_apache_org_v1alpha1_AppStatus, AppStatus>>
 
-IntegrationPhase --.
+AppPhase --.
 
 
-[#_camel_apache_org_v1_IntegrationSpec]
-=== IntegrationSpec
+[#_camel_apache_org_v1alpha1_AppSpec]
+=== AppSpec
 
 *Appears on:*
 
-* <<#_camel_apache_org_v1_Integration, Integration>>
+* <<#_camel_apache_org_v1alpha1_App, App>>
 
-IntegrationSpec specifies the configuration of an Integration.
+AppSpec specifies the configuration of an Integration.
 The Integration will be watched by the operator which will be in charge to run the related application, according to the configuration specified.
 
 
-[#_camel_apache_org_v1_IntegrationStatus]
-=== IntegrationStatus
+[#_camel_apache_org_v1alpha1_AppStatus]
+=== AppStatus
 
 *Appears on:*
 
-* <<#_camel_apache_org_v1_Integration, Integration>>
+* <<#_camel_apache_org_v1alpha1_App, App>>
 
-IntegrationStatus defines the observed state of Integration.
+AppStatus defines the observed state of Integration.
 
 [cols="2,2a",options="header"]
 |===
@@ -85,7 +85,7 @@ IntegrationStatus defines the observed state of Integration.
 |Description
 
 |`phase` +
-*xref:#_camel_apache_org_v1_IntegrationPhase[IntegrationPhase]*
+*xref:#_camel_apache_org_v1alpha1_AppPhase[AppPhase]*
 |
 
 
