@@ -1,0 +1,95 @@
+[#_camel_apache_org_v1]
+== camel.apache.org/v1
+
+Package v1 contains API Schema definitions for the camel v1 API group
+
+==  Resource Types
+
+[#_camel_apache_org_v1_Integration]
+=== Integration
+
+Integration is the Schema for the integrations API.
+
+[cols="2,2a",options="header"]
+|===
+|Field
+|Description
+
+|`apiVersion` +
+string
+|`camel.apache.org/v1`
+
+|`kind` +
+string
+|`Integration`
+|`metadata` +
+*https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.32/#objectmeta-v1-meta[Kubernetes meta/v1.ObjectMeta]*
+|
+
+
+
+
+Refer to the Kubernetes API documentation for the fields of the `metadata` field.
+|`spec` +
+*xref:#_camel_apache_org_v1_IntegrationSpec[IntegrationSpec]*
+|
+
+
+the desired Integration specification
+
+|`status` +
+*xref:#_camel_apache_org_v1_IntegrationStatus[IntegrationStatus]*
+|
+
+
+the status of the Integration
+
+
+|===
+
+== Internal Types
+
+[#_camel_apache_org_v1_IntegrationPhase]
+=== IntegrationPhase(`string` alias)
+
+*Appears on:*
+
+* <<#_camel_apache_org_v1_IntegrationStatus, IntegrationStatus>>
+
+IntegrationPhase --.
+
+
+[#_camel_apache_org_v1_IntegrationSpec]
+=== IntegrationSpec
+
+*Appears on:*
+
+* <<#_camel_apache_org_v1_Integration, Integration>>
+
+IntegrationSpec specifies the configuration of an Integration.
+The Integration will be watched by the operator which will be in charge to run the related application, according to the configuration specified.
+
+
+[#_camel_apache_org_v1_IntegrationStatus]
+=== IntegrationStatus
+
+*Appears on:*
+
+* <<#_camel_apache_org_v1_Integration, Integration>>
+
+IntegrationStatus defines the observed state of Integration.
+
+[cols="2,2a",options="header"]
+|===
+|Field
+|Description
+
+|`phase` +
+*xref:#_camel_apache_org_v1_IntegrationPhase[IntegrationPhase]*
+|
+
+
+the actual phase
+
+
+|===
