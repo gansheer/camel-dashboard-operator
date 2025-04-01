@@ -25,6 +25,7 @@ import (
 	"sync"
 
 	"github.com/sirupsen/logrus"
+	"github.com/squakez/camel-dashboard-operator/pkg/util"
 	"k8s.io/client-go/scale"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -46,7 +47,6 @@ import (
 	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	camel "github.com/squakez/camel-dashboard-operator/pkg/client/camel/clientset/versioned"
 	camelv1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/client/camel/clientset/versioned/typed/camel/v1alpha1"
-	"github.com/squakez/camel-dashboard-operator/pkg/util"
 )
 
 const (

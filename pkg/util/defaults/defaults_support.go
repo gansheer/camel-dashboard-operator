@@ -19,31 +19,10 @@ package defaults
 
 import (
 	"os"
-	"strconv"
-
-	"github.com/squakez/camel-dashboard-operator/pkg/util/log"
 )
-
-func BaseImage() string {
-	return envOrDefault(baseImage, "KAMEL_BASE_IMAGE", "RELATED_IMAGE_BASE")
-}
-
-func InstallDefaultKamelets() bool {
-	return boolEnvOrDefault(installDefaultKamelets, "KAMEL_INSTALL_DEFAULT_KAMELETS")
-}
 
 func OperatorID() string {
 	return envOrDefault("", "KAMEL_OPERATOR_ID", "OPERATOR_ID")
-}
-
-func boolEnvOrDefault(def bool, envs ...string) bool {
-	strVal := envOrDefault(strconv.FormatBool(def), envs...)
-	res, err := strconv.ParseBool(strVal)
-	if err != nil {
-		log.Error(err, "cannot parse boolean property", "property", def, "value", strVal)
-	}
-
-	return res
 }
 
 func envOrDefault(def string, envs ...string) string {

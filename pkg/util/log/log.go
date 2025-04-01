@@ -21,7 +21,7 @@ import (
 	"fmt"
 
 	"github.com/go-logr/logr"
-	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
+	v1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
@@ -95,7 +95,7 @@ func (l Logger) WithValues(keysAndValues ...interface{}) Logger {
 }
 
 // ForIntegration --.
-func (l Logger) ForIntegration(target *v1alpha1.App) Logger {
+func (l Logger) ForApp(target *v1alpha1.App) Logger {
 	return l.WithValues(
 		"api-version", target.APIVersion,
 		"kind", target.Kind,
@@ -126,8 +126,8 @@ func WithValues(keysAndValues ...interface{}) Logger {
 }
 
 // ForIntegration --.
-func ForIntegration(target *v1alpha1.App) Logger {
-	return Log.ForIntegration(target)
+func ForApp(target *v1alpha1.App) Logger {
+	return Log.ForApp(target)
 }
 
 // ***********************************

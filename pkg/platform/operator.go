@@ -18,17 +18,11 @@ limitations under the License.
 package platform
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
 
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/event"
-
 	"github.com/squakez/camel-dashboard-operator/pkg/util/log"
-	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -50,27 +44,6 @@ func IsCurrentOperatorGlobal() bool {
 
 	log.Debug("Operator is local to namespace")
 	return false
-}
-
-// GetOperatorPod returns the Pod which is running the operator in a given namespace.
-func GetOperatorPod(ctx context.Context, c ctrl.Reader, ns string) *corev1.Pod {
-	lst := corev1.PodList{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: corev1.SchemeGroupVersion.String(),
-		},
-	}
-	if err := c.List(ctx, &lst,
-		ctrl.InNamespace(ns),
-		ctrl.MatchingLabels{
-			"camel.apache.org/component": "operator",
-		}); err != nil {
-		return nil
-	}
-	if len(lst.Items) == 0 {
-		return nil
-	}
-	return &lst.Items[0]
 }
 
 // GetOperatorWatchNamespace returns the namespace the operator watches.
@@ -100,21 +73,4 @@ func GetOperatorPodName() string {
 // GetOperatorLockName returns the name of the lock lease that is electing a leader on the particular namespace.
 func GetOperatorLockName(operatorID string) string {
 	return fmt.Sprintf("%s-lock", operatorID)
-}
-
-// FilteringFuncs do preliminary checks to determine if certain events should be handled by the controller
-// based on labels on the resources (e.g. camel.apache.org/operator.id) and the operator configuration,
-// before handing the computation over to the user code.
-type FilteringFuncs[T ctrl.Object] struct {
-	// Create returns true if the Create event should be processed
-	CreateFunc func(event.TypedCreateEvent[T]) bool
-
-	// Delete returns true if the Delete event should be processed
-	DeleteFunc func(event.TypedDeleteEvent[T]) bool
-
-	// Update returns true if the Update event should be processed
-	UpdateFunc func(event.TypedUpdateEvent[T]) bool
-
-	// Generic returns true if the Generic event should be processed
-	GenericFunc func(event.TypedGenericEvent[T]) bool
 }

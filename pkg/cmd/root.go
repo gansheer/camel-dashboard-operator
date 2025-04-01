@@ -185,23 +185,6 @@ func (command *RootCmdOptions) NewCmdClient() (client.Client, error) {
 	return client.NewOutOfClusterClient(command.KubeConfig)
 }
 
-func (command *RootCmdOptions) PrintVerboseOut(cmd *cobra.Command, a ...interface{}) {
-	if command.Verbose {
-		fmt.Fprintln(cmd.OutOrStdout(), a...)
-	}
-}
-
-func (command *RootCmdOptions) PrintfVerboseOutf(cmd *cobra.Command, format string, a ...interface{}) {
-	if command.Verbose {
-		fmt.Fprintf(cmd.OutOrStdout(), format, a...)
-	}
-}
-func (command *RootCmdOptions) PrintfVerboseErrf(cmd *cobra.Command, format string, a ...interface{}) {
-	if command.Verbose {
-		fmt.Fprintf(cmd.ErrOrStderr(), format, a...)
-	}
-}
-
 func wrappedFlagUsages(cmd *cobra.Command) string {
 	width := 80
 	if w, _, err := term.GetSize(0); err == nil {

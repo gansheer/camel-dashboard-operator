@@ -19,65 +19,15 @@ package cmd
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 
 	"github.com/go-viper/mapstructure/v2"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-
-	p "github.com/gertd/go-pluralize"
 )
-
-const (
-	offlineCommandLabel = "camel.apache.org/cmd.offline"
-)
-
-func bindPFlagsHierarchy(cmd *cobra.Command, v *viper.Viper) error {
-	for _, c := range cmd.Commands() {
-		if err := bindPFlags(c, v); err != nil {
-			return err
-		}
-
-		if err := bindPFlagsHierarchy(c, v); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func bindPFlags(cmd *cobra.Command, v *viper.Viper) error {
-	prefix := pathToRoot(cmd)
-	pl := p.NewClient()
-
-	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		name := flag.Name
-		name = strings.ReplaceAll(name, "_", "-")
-		name = strings.ReplaceAll(name, ".", "-")
-
-		if err := v.BindPFlag(prefix+"."+name, flag); err != nil {
-			log.Printf("error binding flag %s with prefix %s to viper: %v", flag.Name, prefix, err)
-		}
-
-		// this is a little bit of a hack to register plural version of properties
-		// based on the naming conventions used by the flag type because it is not
-		// possible to know what is the type of the flag
-		flagType := strings.ToUpper(flag.Value.Type())
-		if strings.Contains(flagType, "SLICE") || strings.Contains(flagType, "ARRAY") {
-			if err := v.BindPFlag(prefix+"."+pl.Plural(name), flag); err != nil {
-				log.Printf("error binding plural flag %s with prefix %s to viper: %v", flag.Name, prefix, err)
-			}
-		}
-	})
-
-	return nil
-}
 
 func pathToRoot(cmd *cobra.Command) string {
 	path := cmd.Name()
@@ -171,49 +121,4 @@ func stringToSliceHookFunc(comma rune) mapstructure.DecodeHookFunc {
 
 func cmdOnly(cmd *cobra.Command, options interface{}) *cobra.Command {
 	return cmd
-}
-
-func isOfflineCommand(cmd *cobra.Command) bool {
-	return cmd.Annotations[offlineCommandLabel] == "true"
-}
-
-func clone(dst interface{}, src interface{}) error {
-	if dst == nil {
-		return fmt.Errorf("dst cannot be nil")
-	}
-	if src == nil {
-		return fmt.Errorf("src cannot be nil")
-	}
-
-	data, err := json.Marshal(src)
-	if err != nil {
-		return fmt.Errorf("unable to marshal src: %w", err)
-	}
-
-	err = json.Unmarshal(data, dst)
-	if err != nil {
-		return fmt.Errorf("unable to unmarshal into dst: %w", err)
-	}
-	return nil
-}
-
-func fieldByMapstructureTagName(target reflect.Value, tagName string) (reflect.StructField, bool) {
-	pl := p.NewClient()
-
-	for i := range target.Type().NumField() {
-		f := target.Type().Field(i)
-
-		tag, ok := f.Tag.Lookup(MapstructureTagName)
-		if !ok {
-			continue
-		}
-
-		if tag == tagName {
-			return f, true
-		} else if tag == pl.Plural(tagName) {
-			return f, true
-		}
-	}
-
-	return reflect.StructField{}, false
 }
