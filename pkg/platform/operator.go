@@ -31,7 +31,7 @@ const (
 	operatorPodNameEnvVariable        = "POD_NAME"
 )
 
-const OperatorLockName = "camel-k-lock"
+const OperatorLockName = "camel-dashboard-lock"
 
 var OperatorImage string
 

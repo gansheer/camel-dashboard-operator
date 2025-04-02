@@ -126,7 +126,7 @@ func NewClientWithConfig(fastDiscovery bool, cfg *rest.Config) (Client, error) {
 
 	// The below call to apis.AddToScheme is not thread safe in the k8s API
 	// We try to synchronize here across all k8s clients
-	// https://github.com/apache/camel-k/issues/5315
+	// https://github.com/apache/camel-dashboard/issues/5315
 	newClientMutex.Lock()
 	defer newClientMutex.Unlock()
 

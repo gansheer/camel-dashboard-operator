@@ -22,8 +22,8 @@ metadata:
     capabilities: Full Lifecycle
     categories: Integration & Delivery
     certified: "false"
-    containerImage: docker.io/apache/camel-dashboard:2.7.0-SNAPSHOT
-    createdAt: 2025-04-02T10:38:28Z
+    containerImage: docker.io/apache/camel-dashboard:0.0.1-SNAPSHOT
+    createdAt: 2025-04-02T10:40:08Z
     description: Apache Camel K is a lightweight integration platform, born on Kubernetes,
       with serverless superpowers.
     operators.operatorframework.io/builder: operator-sdk-v1.16.0
@@ -31,7 +31,7 @@ metadata:
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/apache/camel-dashboard
     support: Camel
-  name: camel-dashboard.v2.7.0
+  name: camel-dashboard.v0.0.1
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
@@ -168,4 +168,4 @@ spec:
   selector:
     matchLabels:
       name: camel-dashboard-operator
-  version: 2.7.0
+  version: 0.0.1

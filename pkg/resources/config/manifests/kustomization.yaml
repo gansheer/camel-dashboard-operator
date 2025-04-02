@@ -36,4 +36,4 @@ patchesStrategicMerge:
 images:
 - name: docker.io/apache/camel-dashboard
   newName: docker.io/apache/camel-dashboard
-  newTag: 2.7.0-SNAPSHOT
+  newTag: 0.0.1-SNAPSHOT

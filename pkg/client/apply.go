@@ -83,7 +83,7 @@ func (a *ServerOrClientSideApplier) serverSideApply(ctx context.Context, resourc
 	if err != nil {
 		return err
 	}
-	if err = a.Client.Patch(ctx, target, ctrl.Apply, ctrl.ForceOwnership, ctrl.FieldOwner("camel-k-operator")); err != nil {
+	if err = a.Client.Patch(ctx, target, ctrl.Apply, ctrl.ForceOwnership, ctrl.FieldOwner("camel-dashboard-operator")); err != nil {
 		return fmt.Errorf("error during apply resource: %s/%s: %w", resource.GetNamespace(), resource.GetName(), err)
 	}
 

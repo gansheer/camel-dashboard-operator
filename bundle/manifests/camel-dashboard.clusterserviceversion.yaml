@@ -23,8 +23,8 @@ metadata:
     capabilities: Full Lifecycle
     categories: Integration & Delivery
     certified: "false"
-    containerImage: docker.io/apache/camel-dashboard:2.7.0-SNAPSHOT
-    createdAt: "2025-04-02T10:38:29Z"
+    containerImage: docker.io/apache/camel-dashboard:0.0.1-SNAPSHOT
+    createdAt: "2025-04-02T10:40:09Z"
     description: Apache Camel K is a lightweight integration platform, born on Kubernetes,
       with serverless superpowers.
     operators.operatorframework.io/builder: operator-sdk-v1.30.0
@@ -32,7 +32,7 @@ metadata:
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
     repository: https://github.com/apache/camel-dashboard
     support: Camel
-  name: camel-dashboard-operator.v2.7.0
+  name: camel-dashboard-operator.v0.0.1
 spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
@@ -120,7 +120,7 @@ spec:
           app: camel-dashboard
           app.kubernetes.io/component: operator
           app.kubernetes.io/name: camel-dashboard
-          app.kubernetes.io/version: 2.7.0-SNAPSHOT
+          app.kubernetes.io/version: 0.0.1-SNAPSHOT
           camel.apache.org/component: operator
           name: camel-dashboard-operator
         name: camel-dashboard-operator
@@ -138,7 +138,7 @@ spec:
                 app: camel-dashboard
                 app.kubernetes.io/component: operator
                 app.kubernetes.io/name: camel-dashboard
-                app.kubernetes.io/version: 2.7.0-SNAPSHOT
+                app.kubernetes.io/version: 0.0.1-SNAPSHOT
                 camel.apache.org/component: operator
                 name: camel-dashboard-operator
             spec:
@@ -165,7 +165,7 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.namespace
-                image: docker.io/apache/camel-dashboard:2.7.0-SNAPSHOT
+                image: docker.io/apache/camel-dashboard:0.0.1-SNAPSHOT
                 imagePullPolicy: IfNotPresent
                 livenessProbe:
                   httpGet:
@@ -581,4 +581,4 @@ spec:
   selector:
     matchLabels:
       name: camel-dashboard-operator
-  version: 2.7.0
+  version: 0.0.1

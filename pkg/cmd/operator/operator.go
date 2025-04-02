@@ -71,10 +71,9 @@ var log = logutil.Log.WithName("cmd")
 func printVersion() {
 	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("Camel K Operator Version: %v", defaults.Version))
-	log.Info(fmt.Sprintf("Camel K Default Runtime Version: %v", defaults.DefaultRuntimeVersion))
-	log.Info(fmt.Sprintf("Camel K Git Commit: %v", defaults.GitCommit))
-	log.Info(fmt.Sprintf("Camel K Operator ID: %v", defaults.OperatorID()))
+	log.Info(fmt.Sprintf("Camel Dashboard Operator Version: %v", defaults.Version))
+	log.Info(fmt.Sprintf("Camel Dashboard Git Commit: %v", defaults.GitCommit))
+	log.Info(fmt.Sprintf("Camel Dashboard Operator ID: %v", defaults.OperatorID()))
 
 	// Will only appear if DEBUG level has been enabled using the env var LOG_LEVEL
 	log.Debug("*** DEBUG level messages will be logged ***")
@@ -211,7 +210,7 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 		Metrics:                       metricsserver.Options{BindAddress: ":" + strconv.Itoa(int(monitoringPort))},
 		Cache:                         options,
 	})
-	exitOnError(err, "")
+	exitOnError(err, "Some error happened while creating a new manager")
 
 	log.Info("Configuring manager")
 	exitOnError(mgr.AddHealthzCheck("health-probe", healthz.Ping), "Unable add liveness check")
@@ -227,8 +226,8 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 
 	synthEnvVal, synth := os.LookupEnv("CAMEL_APP_IMPORT")
 	if synth && synthEnvVal == "true" {
-		log.Info("Starting the synthetic Integration manager")
-		exitOnError(synthetic.ManageSyntheticIntegrations(ctx, ctrlClient, mgr.GetCache()), "synthetic Integration manager error")
+		log.Info("Starting the Camel App Syntentic manager")
+		exitOnError(synthetic.ManageSyntheticCamelApps(ctx, ctrlClient, mgr.GetCache()), "synthetic Integration manager error")
 	} else {
 		log.Info("Synthetic Integration manager not configured, skipping")
 	}

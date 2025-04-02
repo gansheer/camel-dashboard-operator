@@ -121,7 +121,7 @@ func TestNonManagedDeployment(t *testing.T) {
 	deploymentAdapter, err := nonManagedCamelApplicationFactory(deploy)
 	require.NoError(t, err)
 	assert.NotNil(t, deploymentAdapter)
-	assert.Equal(t, expectedIt, *deploymentAdapter.Integration())
+	assert.Equal(t, expectedIt, *deploymentAdapter.CamelApp())
 }
 
 func TestNonManagedCronJob(t *testing.T) {
@@ -179,7 +179,7 @@ func TestNonManagedCronJob(t *testing.T) {
 	cronJobAdapter, err := nonManagedCamelApplicationFactory(cron)
 	require.NoError(t, err)
 	assert.NotNil(t, cronJobAdapter)
-	assert.Equal(t, expectedIt, *cronJobAdapter.Integration())
+	assert.Equal(t, expectedIt, *cronJobAdapter.CamelApp())
 }
 
 func TestNonManagedKnativeService(t *testing.T) {
@@ -238,5 +238,5 @@ func TestNonManagedKnativeService(t *testing.T) {
 	knativeServiceAdapter, err := nonManagedCamelApplicationFactory(ksvc)
 	require.NoError(t, err)
 	assert.NotNil(t, knativeServiceAdapter)
-	assert.Equal(t, expectedIt, *knativeServiceAdapter.Integration())
+	assert.Equal(t, expectedIt, *knativeServiceAdapter.CamelApp())
 }

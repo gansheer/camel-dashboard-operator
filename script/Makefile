@@ -24,7 +24,7 @@ PROJECT_PATH := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 LOCALBIN := $(PROJECT_PATH)/bin
 
 VERSIONFILE := pkg/util/defaults/defaults.go
-VERSION ?= 2.7.0-SNAPSHOT
+VERSION ?= 0.0.1-SNAPSHOT
 LAST_RELEASED_IMAGE_NAME := camel-dashboard-operator
 LAST_RELEASED_VERSION ?= 2.6.0
 DEFAULT_RUNTIME_VERSION := 3.15.2
@@ -705,36 +705,21 @@ endif
 	cd $(KUST_TMP)/install/overlays/platform && kustomize edit set namespace $(NAMESPACE)
 	kubectl apply -k $(KUST_TMP)/$(KUSTOMIZE_DIR) --server-side --force-conflicts
 
-install-registry:
-	@echo "####### Installing container registry..."
-ifdef REGISTRY
-	@echo "INFO: Setting IntegrationPlatform container registry to $(REGISTRY)"
-	@sed -i 's/address: .*/address: $(REGISTRY)/' $(KUST_TMP)/install/overlays/platform/integration-platform.yaml
-	kubectl apply -k $(KUST_TMP)/install/overlays/platform --server-side -n $(NAMESPACE) --force-conflicts
-else
-	$(eval MINIKUBE_REGISTRY=$(shell kubectl -n kube-system get service registry -o jsonpath='{.spec.clusterIP}' 2> /dev/null))
-ifneq ($(MINIKUBE_REGISTRY),"")
-	@echo "INFO: Looks like you're on Minikube. Setting IntegrationPlatform container registry to $(MINIKUBE_REGISTRY)"
-	@sed -i 's/address: .*/address: $(MINIKUBE_REGISTRY)/' $(KUST_TMP)/install/overlays/platform/integration-platform.yaml
-	kubectl apply -k $(KUST_TMP)/install/overlays/platform --server-side -n $(NAMESPACE) --force-conflicts
-endif
-endif
-
 install-k8s-global: DEFAULT_NS="camel-dashboard"
 install-k8s-global: KUSTOMIZE_DIR="install/overlays/kubernetes/descoped"
-install-k8s-global: clone-kustomize-dir set-operator-id set-operator-env install-operator install-registry
+install-k8s-global: clone-kustomize-dir set-operator-id set-operator-env install-operator
 
 install-k8s-ns: DEFAULT_NS="default"
 install-k8s-ns: KUSTOMIZE_DIR="install/overlays/kubernetes/namespaced"
-install-k8s-ns: clone-kustomize-dir set-operator-id set-operator-env install-operator install-registry
+install-k8s-ns: clone-kustomize-dir set-operator-id set-operator-env install-operator
 
 uninstall:
 ifdef NAMESPACE
 	kubectl delete deploy -l app=camel-dashboard -n $(NAMESPACE)
-	kubectl delete configmap,secret,sa,rolebindings,clusterrolebindings,roles,clusterroles,integrationplatform -l app=camel-dashboard -n $(NAMESPACE)
+	kubectl delete configmap,secret,sa,rolebindings,clusterrolebindings,roles,clusterroles -l app=camel-dashboard -n $(NAMESPACE)
 else
 	kubectl delete deploy -l app=camel-dashboard
-	kubectl delete configmap,secret,sa,rolebindings,clusterrolebindings,roles,clusterroles,integrationplatform -l app=camel-dashboard
+	kubectl delete configmap,secret,sa,rolebindings,clusterrolebindings,roles,clusterroles -l app=camel-dashboard
 endif
 
 install-crds:

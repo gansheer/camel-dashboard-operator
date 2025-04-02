@@ -42,12 +42,10 @@ var (
 	controller = true
 )
 
-// ManageSyntheticIntegrations is the controller for synthetic Integrations. Consider that the lifecycle of the objects are driven
-// by the way we are monitoring them. Since we're filtering by `camel.apache.org/integration` label in the cached client,
-// you must consider an add, update or delete
+// ManageSyntheticCamelApps is the controller for synthetic Camel Applications. Consider that the lifecycle of the objects are driven
+// by the way we are monitoring them. Since we're filtering by some label in the cached client, you must consider an add, update or delete
 // accordingly, ie, when the user label the resource, then it is considered as an add, when it removes the label, it is considered as a delete.
-// We must filter only non managed objects in order to avoid to conflict with the reconciliation loop of managed objects (owned by an Integration).
-func ManageSyntheticIntegrations(ctx context.Context, c client.Client, cache cache.Cache) error {
+func ManageSyntheticCamelApps(ctx context.Context, c client.Client, cache cache.Cache) error {
 	informers, err := getInformers(ctx, c, cache)
 	if err != nil {
 		return err
@@ -85,37 +83,35 @@ func ManageSyntheticIntegrations(ctx context.Context, c client.Client, cache cac
 //
 //nolint:nestif
 func onAdd(ctx context.Context, c client.Client, ctrlObj ctrl.Object) {
-	integrationName := ctrlObj.GetLabels()[v1alpha1.AppLabel]
-	it, err := getSyntheticIntegration(ctx, c, ctrlObj.GetNamespace(), integrationName)
+	log.Infof("Detected a new %s resource named %s in namespace %s",
+		ctrlObj.GetObjectKind().GroupVersionKind().Kind, ctrlObj.GetName(), ctrlObj.GetNamespace())
+	appName := ctrlObj.GetLabels()[v1alpha1.AppLabel]
+	app, err := getSyntheticCamelApp(ctx, c, ctrlObj.GetNamespace(), appName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
 			adapter, err := nonManagedCamelApplicationFactory(ctrlObj)
 			if err != nil {
-				log.Errorf(err, "Some error happened while creating a Camel application adapter for %s", integrationName)
+				log.Errorf(err, "Some error happened while creating a Camel application adapter for %s", appName)
 			}
-
-			// TODO: looking at the code, nonManagedCamelApplicationFactory may return nil but the
-			//       previous error handler does not return/break so the code below may panic when
-			//       invoking adapter.Integration()
-			if err = createSyntheticIntegration(ctx, c, adapter.Integration()); err != nil {
-				log.Errorf(err, "Some error happened while creating a synthetic Integration %s", integrationName)
+			if err = createSyntheticCamelApp(ctx, c, adapter.CamelApp()); err != nil {
+				log.Errorf(err, "Some error happened while creating a synthetic Camel Application %s", appName)
 			}
-			log.Infof("Created a synthetic Integration %s after %s resource object", it.GetName(), ctrlObj.GetName())
+			log.Infof("Created a synthetic Camel Application %s after %s resource object", app.GetName(), ctrlObj.GetName())
 		} else {
-			log.Errorf(err, "Some error happened while loading a synthetic Integration %s", integrationName)
+			log.Errorf(err, "Some error happened while loading a synthetic Camel Application %s", appName)
 		}
 	} else {
-		log.Infof("Synthetic Integration %s is in phase %s. Skipping.", integrationName, it.Status.Phase)
+		log.Infof("Synthetic Camel Application %s is in phase %s. Skipping.", appName, app.Status.Phase)
 	}
 }
 
 func onDelete(ctx context.Context, c client.Client, ctrlObj ctrl.Object) {
-	integrationName := ctrlObj.GetLabels()[v1alpha1.AppLabel]
+	appName := ctrlObj.GetLabels()[v1alpha1.AppLabel]
 	// Importing label removed
-	if err := deleteSyntheticIntegration(ctx, c, ctrlObj.GetNamespace(), integrationName); err != nil {
-		log.Errorf(err, "Some error happened while deleting a synthetic Integration %s", integrationName)
+	if err := deleteSyntheticCamelApp(ctx, c, ctrlObj.GetNamespace(), appName); err != nil {
+		log.Errorf(err, "Some error happened while deleting a synthetic Camel Application %s", appName)
 	}
-	log.Infof("Deleted synthetic Integration %s", integrationName)
+	log.Infof("Deleted synthetic Camel Application %s", appName)
 }
 
 func getInformers(ctx context.Context, cl client.Client, c cache.Cache) ([]cache.Informer, error) {
@@ -146,26 +142,26 @@ func getInformers(ctx context.Context, cl client.Client, c cache.Cache) ([]cache
 	return informers, nil
 }
 
-func getSyntheticIntegration(ctx context.Context, c client.Client, namespace, name string) (*v1alpha1.App, error) {
-	it := v1alpha1.NewApp(namespace, name)
-	err := c.Get(ctx, ctrl.ObjectKeyFromObject(&it), &it)
-	return &it, err
+func getSyntheticCamelApp(ctx context.Context, c client.Client, namespace, name string) (*v1alpha1.App, error) {
+	app := v1alpha1.NewApp(namespace, name)
+	err := c.Get(ctx, ctrl.ObjectKeyFromObject(&app), &app)
+	return &app, err
 }
 
-func createSyntheticIntegration(ctx context.Context, c client.Client, it *v1alpha1.App) error {
-	return c.Create(ctx, it, ctrl.FieldOwner("camel-k-operator"))
+func createSyntheticCamelApp(ctx context.Context, c client.Client, it *v1alpha1.App) error {
+	return c.Create(ctx, it, ctrl.FieldOwner("camel-dashboard-operator"))
 }
 
-func deleteSyntheticIntegration(ctx context.Context, c client.Client, namespace, name string) error {
-	// As the Integration label was removed, we don't know which is the Synthetic integration to remove
-	it := v1alpha1.NewApp(namespace, name)
-	return c.Delete(ctx, &it)
+func deleteSyntheticCamelApp(ctx context.Context, c client.Client, namespace, name string) error {
+	// As the Integration label was removed, we don't know which is the Synthetic Camel Application to remove
+	app := v1alpha1.NewApp(namespace, name)
+	return c.Delete(ctx, &app)
 }
 
 // nonManagedCamelApplicationAdapter represents a Camel application built and deployed outside the operator lifecycle.
 type nonManagedCamelApplicationAdapter interface {
-	// Integration return an Integration resource fed by the Camel application adapter.
-	Integration() *v1alpha1.App
+	// CamelApp return a CamelApp resource fed by the Camel application adapter.
+	CamelApp() *v1alpha1.App
 }
 
 func nonManagedCamelApplicationFactory(obj ctrl.Object) (nonManagedCamelApplicationAdapter, error) {
@@ -189,10 +185,10 @@ type nonManagedCamelDeployment struct {
 	deploy *appsv1.Deployment
 }
 
-// Integration return an Integration resource fed by the Camel application adapter.
-func (app *nonManagedCamelDeployment) Integration() *v1alpha1.App {
-	it := v1alpha1.NewApp(app.deploy.Namespace, app.deploy.Labels[v1alpha1.AppLabel])
-	it.SetAnnotations(map[string]string{
+// CamelApp return an CamelApp resource fed by the Camel application adapter.
+func (app *nonManagedCamelDeployment) CamelApp() *v1alpha1.App {
+	newApp := v1alpha1.NewApp(app.deploy.Namespace, app.deploy.Labels[v1alpha1.AppLabel])
+	newApp.SetAnnotations(map[string]string{
 		v1alpha1.AppImportedNameLabel: app.deploy.Name,
 		v1alpha1.AppImportedKindLabel: "Deployment",
 		v1alpha1.AppSyntheticLabel:    "true",
@@ -206,23 +202,8 @@ func (app *nonManagedCamelDeployment) Integration() *v1alpha1.App {
 			Controller: &controller,
 		},
 	}
-	it.SetOwnerReferences(references)
-	return &it
-}
-
-// getContainerNameFromDeployment returns the container name which is running the Camel application.
-func (app *nonManagedCamelDeployment) getContainerNameFromDeployment() string {
-	firstContainerName := ""
-	for _, ct := range app.deploy.Spec.Template.Spec.Containers {
-		// set as fallback if no container is named as the deployment
-		if firstContainerName == "" {
-			firstContainerName = ct.Name
-		}
-		if ct.Name == app.deploy.Name {
-			return app.deploy.Name
-		}
-	}
-	return firstContainerName
+	newApp.SetOwnerReferences(references)
+	return &newApp
 }
 
 // NonManagedCamelCronjob represents a cron Camel application built and deployed outside the operator lifecycle.
@@ -230,10 +211,10 @@ type NonManagedCamelCronjob struct {
 	cron *batchv1.CronJob
 }
 
-// Integration return an Integration resource fed by the Camel application adapter.
-func (app *NonManagedCamelCronjob) Integration() *v1alpha1.App {
-	it := v1alpha1.NewApp(app.cron.Namespace, app.cron.Labels[v1alpha1.AppLabel])
-	it.SetAnnotations(map[string]string{
+// CamelApp return an CamelApp resource fed by the Camel application adapter.
+func (app *NonManagedCamelCronjob) CamelApp() *v1alpha1.App {
+	newApp := v1alpha1.NewApp(app.cron.Namespace, app.cron.Labels[v1alpha1.AppLabel])
+	newApp.SetAnnotations(map[string]string{
 		v1alpha1.AppImportedNameLabel: app.cron.Name,
 		v1alpha1.AppImportedKindLabel: "CronJob",
 		v1alpha1.AppSyntheticLabel:    "true",
@@ -247,8 +228,8 @@ func (app *NonManagedCamelCronjob) Integration() *v1alpha1.App {
 			Controller: &controller,
 		},
 	}
-	it.SetOwnerReferences(references)
-	return &it
+	newApp.SetOwnerReferences(references)
+	return &newApp
 }
 
 // NonManagedCamelKnativeService represents a Knative Service based Camel application built and deployed outside the operator lifecycle.
@@ -256,10 +237,10 @@ type NonManagedCamelKnativeService struct {
 	ksvc *servingv1.Service
 }
 
-// Integration return an Integration resource fed by the Camel application adapter.
-func (app *NonManagedCamelKnativeService) Integration() *v1alpha1.App {
-	it := v1alpha1.NewApp(app.ksvc.Namespace, app.ksvc.Labels[v1alpha1.AppLabel])
-	it.SetAnnotations(map[string]string{
+// CamelApp return an CamelApp resource fed by the Camel application adapter.
+func (app *NonManagedCamelKnativeService) CamelApp() *v1alpha1.App {
+	newApp := v1alpha1.NewApp(app.ksvc.Namespace, app.ksvc.Labels[v1alpha1.AppLabel])
+	newApp.SetAnnotations(map[string]string{
 		v1alpha1.AppImportedNameLabel: app.ksvc.Name,
 		v1alpha1.AppImportedKindLabel: "KnativeService",
 		v1alpha1.AppSyntheticLabel:    "true",
@@ -273,6 +254,6 @@ func (app *NonManagedCamelKnativeService) Integration() *v1alpha1.App {
 			Controller: &controller,
 		},
 	}
-	it.SetOwnerReferences(references)
-	return &it
+	newApp.SetOwnerReferences(references)
+	return &newApp
 }

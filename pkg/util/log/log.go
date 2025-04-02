@@ -31,7 +31,7 @@ var Log Logger
 
 func init() {
 	Log = Logger{
-		delegate: logf.Log.WithName("camel-k"),
+		delegate: logf.Log.WithName("camel-dashboard"),
 	}
 }
 

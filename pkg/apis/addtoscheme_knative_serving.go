@@ -15,22 +15,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package defaults
+package apis
 
 import (
-	"os"
+	serving "knative.dev/serving/pkg/apis/serving/v1"
 )
 
-func OperatorID() string {
-	return envOrDefault("", "OPERATOR_ID")
-}
-
-func envOrDefault(def string, envs ...string) string {
-	for i := range envs {
-		if val := os.Getenv(envs[i]); val != "" {
-			return val
-		}
-	}
-
-	return def
+func init() {
+	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
+	AddToSchemes = append(AddToSchemes, serving.AddToScheme)
 }
