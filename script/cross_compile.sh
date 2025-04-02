@@ -20,7 +20,7 @@ builddir=$(realpath ${location}/../xtmp)
 
 rm -rf ${builddir}
 
-basename=camel-k-client
+basename=camel-dashboard-client
 
 if [ "$#" -lt 2 ]; then
     echo "usage: $0 <version> <build_flags...>"

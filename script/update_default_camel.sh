@@ -21,10 +21,10 @@ set -e
 
 location=$(dirname $0)
 
-rm -rf /tmp/camel-k-runtime
-git clone --depth 1 https://github.com/apache/camel-k-runtime.git /tmp/camel-k-runtime
-ck_runtime_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -f /tmp/camel-k-runtime/pom.xml)
+rm -rf /tmp/camel-dashboard-runtime
+git clone --depth 1 https://github.com/apache/camel-dashboard-runtime.git /tmp/camel-dashboard-runtime
+ck_runtime_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -f /tmp/camel-dashboard-runtime/pom.xml)
 echo "INFO: last Camel K runtime version set at $ck_runtime_version"
 sed -i "s/^DEFAULT_RUNTIME_VERSION := .*$/DEFAULT_RUNTIME_VERSION := $ck_runtime_version/" $location/Makefile
 
-rm -rf /tmp/camel-k-runtime/
+rm -rf /tmp/camel-dashboard-runtime/

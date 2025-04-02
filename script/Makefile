@@ -25,7 +25,7 @@ LOCALBIN := $(PROJECT_PATH)/bin
 
 VERSIONFILE := pkg/util/defaults/defaults.go
 VERSION ?= 2.7.0-SNAPSHOT
-LAST_RELEASED_IMAGE_NAME := camel-k-operator
+LAST_RELEASED_IMAGE_NAME := camel-dashboard-operator
 LAST_RELEASED_VERSION ?= 2.6.0
 DEFAULT_RUNTIME_VERSION := 3.15.2
 # Kubernetes tooling
@@ -53,7 +53,7 @@ OFFICIAL_IMAGE_VERSION := 17-jdk
 BASE_IMAGE := $(BASE_IMAGE_NAME):$(BASE_IMAGE_VERSION)
 LOCAL_REPOSITORY := /etc/maven/m2
 OPENSHIFT_REGISTRY := image-registry.openshift-image-registry.svc:5000
-IMAGE_NAME ?= docker.io/apache/camel-k
+IMAGE_NAME ?= docker.io/apache/camel-dashboard
 # Test for arm64, fall back to amd64
 IMAGE_ARCH ?= $(if $(filter arm64 aarch64,$(shell uname -m)),arm64,amd64)
 OFFICIAL_IMAGE_ARCH := amd64
@@ -78,7 +78,7 @@ MANAGER := pkg/resources/config/manager
 MANIFESTS := pkg/resources/config/manifests
 DEFAULT_CHANNEL ?= $(shell echo "stable-v$(word 1,$(subst ., ,$(lastword $(OPERATOR_VERSION))))")
 CHANNELS ?= $(DEFAULT_CHANNEL),latest
-PACKAGE := camel-k
+PACKAGE := camel-dashboard
 CSV_VERSION := $(OPERATOR_VERSION)
 CSV_NAME := $(PACKAGE).v$(CSV_VERSION)
 # Final CSV name that replaces the name required by the operator-sdk
@@ -97,7 +97,7 @@ INDEX_DIR := index
 OPM := opm
 
 # Used to push pre-release artifacts
-STAGING_IMAGE := docker.io/camelk/camel-k
+STAGING_IMAGE := docker.io/camelk/camel-dashboard
 INSTALL_DEFAULT_KAMELETS ?= true
 
 # When performing integration tests, it is not necessary to always execute build, especially
@@ -112,8 +112,8 @@ TEST_COMMON_PARALLEL_COUNT ?= 2
 TEST_ADVANCED_PARALLEL_COUNT ?= 2
 
 # OLM (Operator Lifecycle Manager and Operator Hub): uncomment to override operator settings at build time
-#GOLDFLAGS += -X github.com/squakez/camel-dashboard-operator/pkg/util/olm.DefaultOperatorName=camel-k-operator
-#GOLDFLAGS += -X github.com/squakez/camel-dashboard-operator/pkg/util/olm.DefaultPackage=camel-k
+#GOLDFLAGS += -X github.com/squakez/camel-dashboard-operator/pkg/util/olm.DefaultOperatorName=camel-dashboard-operator
+#GOLDFLAGS += -X github.com/squakez/camel-dashboard-operator/pkg/util/olm.DefaultPackage=camel-dashboard
 #GOLDFLAGS += -X github.com/squakez/camel-dashboard-operator/pkg/util/olm.DefaultChannel=alpha
 #GOLDFLAGS += -X github.com/squakez/camel-dashboard-operator/pkg/util/olm.DefaultSource=community-operators
 #GOLDFLAGS += -X github.com/squakez/camel-dashboard-operator/pkg/util/olm.DefaultSourceNamespace=openshift-marketplace
@@ -282,14 +282,14 @@ clean:
 	#    https://github.com/golang/go/issues/31002
 	#
 	GO111MODULE=off go clean
-	rm -f camel-k
+	rm -f camel-dashboard
 	rm -f kamel
 	rm -f *.test
 	rm -rf $(LOCALBIN)
 	rm -rf build/_maven_output
 	rm -rf build/_output
-	rm -rf camel-k-client-*.tar.gz
-	rm -rf camel-k-examples-*.tar.gz
+	rm -rf camel-dashboard-client-*.tar.gz
+	rm -rf camel-dashboard-examples-*.tar.gz
 	rm -rf bundle
 	rm -rf $(INDEX_DIR) $(INDEX_DIR).Dockerfile
 
@@ -662,7 +662,7 @@ goimport:
 #####
 
 KUSTOMIZE_DIR = "install/overlays/kubernetes/descoped"
-DEFAULT_NS = "camel-k"
+DEFAULT_NS = "camel-dashboard"
 
 .PHONY: install install-k8s-global install-k8s-ns install-openshift-global install-openshift-ns
 
@@ -721,7 +721,7 @@ ifneq ($(MINIKUBE_REGISTRY),"")
 endif
 endif
 
-install-k8s-global: DEFAULT_NS="camel-k"
+install-k8s-global: DEFAULT_NS="camel-dashboard"
 install-k8s-global: KUSTOMIZE_DIR="install/overlays/kubernetes/descoped"
 install-k8s-global: clone-kustomize-dir set-operator-id set-operator-env install-operator install-registry
 
@@ -731,18 +731,18 @@ install-k8s-ns: clone-kustomize-dir set-operator-id set-operator-env install-ope
 
 uninstall:
 ifdef NAMESPACE
-	kubectl delete deploy -l app=camel-k -n $(NAMESPACE)
-	kubectl delete configmap,secret,sa,rolebindings,clusterrolebindings,roles,clusterroles,integrationplatform -l app=camel-k -n $(NAMESPACE)
+	kubectl delete deploy -l app=camel-dashboard -n $(NAMESPACE)
+	kubectl delete configmap,secret,sa,rolebindings,clusterrolebindings,roles,clusterroles,integrationplatform -l app=camel-dashboard -n $(NAMESPACE)
 else
-	kubectl delete deploy -l app=camel-k
-	kubectl delete configmap,secret,sa,rolebindings,clusterrolebindings,roles,clusterroles,integrationplatform -l app=camel-k
+	kubectl delete deploy -l app=camel-dashboard
+	kubectl delete configmap,secret,sa,rolebindings,clusterrolebindings,roles,clusterroles,integrationplatform -l app=camel-dashboard
 endif
 
 install-crds:
 	kubectl apply -k install/base/config/crd --server-side --force-conflicts
 
 uninstall-crds:
-	kubectl delete crd -l app=camel-k
+	kubectl delete crd -l app=camel-dashboard
 
 uninstall-all: uninstall uninstall-crds
 

@@ -35,46 +35,32 @@ mkdir -p openshift-ecosystem/$1/manifests/
 mkdir -p openshift-ecosystem/$1/metadata/
 mkdir -p openshift-ecosystem/$1/tests/scorecard/
 
-cp ./manifests/camel.apache.org_builds.yaml k8s-operatorhub/$1/manifests/builds.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_camelcatalogs.yaml k8s-operatorhub/$1/manifests/camelcatalogs.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_integrationkits.yaml k8s-operatorhub/$1/manifests/integrationkits.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_integrationplatforms.yaml k8s-operatorhub/$1/manifests/integrationplatforms.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_integrationprofiles.yaml k8s-operatorhub/$1/manifests/integrationprofiles.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_integrations.yaml k8s-operatorhub/$1/manifests/integrations.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_kamelets.yaml k8s-operatorhub/$1/manifests/kamelets.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_pipes.yaml k8s-operatorhub/$1/manifests/pipes.camel.apache.org.crd.yaml
-cp ./manifests/camel-k.clusterserviceversion.yaml k8s-operatorhub/$1/manifests/camel-k.v$1.clusterserviceversion.yaml
+cp ./manifests/camel.apache.org_apps.yaml k8s-operatorhub/$1/manifests/apps.camel.apache.org.crd.yaml
+cp ./manifests/camel-dashboard.clusterserviceversion.yaml k8s-operatorhub/$1/manifests/camel-dashboard.v$1.clusterserviceversion.yaml
 cp ./metadata/annotations.yaml k8s-operatorhub/$1/metadata/annotations.yaml
 cp ./tests/scorecard/config.yaml k8s-operatorhub/$1/tests/scorecard/config.yaml
 
-cp ./manifests/camel.apache.org_builds.yaml openshift-ecosystem/$1/manifests/builds.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_camelcatalogs.yaml openshift-ecosystem/$1/manifests/camelcatalogs.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_integrationkits.yaml openshift-ecosystem/$1/manifests/integrationkits.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_integrationplatforms.yaml openshift-ecosystem/$1/manifests/integrationplatforms.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_integrationprofiles.yaml openshift-ecosystem/$1/manifests/integrationprofiles.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_integrations.yaml openshift-ecosystem/$1/manifests/integrations.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_kamelets.yaml openshift-ecosystem/$1/manifests/kamelets.camel.apache.org.crd.yaml
-cp ./manifests/camel.apache.org_pipes.yaml openshift-ecosystem/$1/manifests/pipes.camel.apache.org.crd.yaml
-cp ./manifests/camel-k.clusterserviceversion.yaml openshift-ecosystem/$1/manifests/camel-k.v$1.clusterserviceversion.yaml
+cp ./manifests/camel.apache.org_apps.yaml openshift-ecosystem/$1/manifests/apps.camel.apache.org.crd.yaml
+cp ./manifests/camel-dashboard.clusterserviceversion.yaml openshift-ecosystem/$1/manifests/camel-dashboard.v$1.clusterserviceversion.yaml
 cp ./metadata/annotations.yaml openshift-ecosystem/$1/metadata/annotations.yaml
 cp ./tests/scorecard/config.yaml openshift-ecosystem/$1/tests/scorecard/config.yaml
 
 # Starting sed to replace operator
 
-sed -i 's/camel-k.v/camel-k-operator.v/g' k8s-operatorhub/$1/manifests/camel-k.v$1.clusterserviceversion.yaml
-sed -i 's/camel-k.v/camel-k-operator.v/g' openshift-ecosystem/$1/manifests/camel-k.v$1.clusterserviceversion.yaml
+sed -i 's/camel-dashboard.v/camel-dashboard-operator.v/g' k8s-operatorhub/$1/manifests/camel-dashboard.v$1.clusterserviceversion.yaml
+sed -i 's/camel-dashboard.v/camel-dashboard-operator.v/g' openshift-ecosystem/$1/manifests/camel-dashboard.v$1.clusterserviceversion.yaml
 
 # Clone projects
 git clone https://github.com/$gh_user/community-operators.git /tmp/operators/community-operators
-cp -r k8s-operatorhub/$version /tmp/operators/community-operators/operators/camel-k/.
+cp -r k8s-operatorhub/$version /tmp/operators/community-operators/operators/camel-dashboard/.
 git clone https://github.com/$gh_user/community-operators-prod.git /tmp/operators/community-operators-prod
-cp -r openshift-ecosystem/$version /tmp/operators/community-operators-prod/operators/camel-k/.
+cp -r openshift-ecosystem/$version /tmp/operators/community-operators-prod/operators/camel-dashboard/.
 
 # Community operators
 cd /tmp/operators/community-operators
 git checkout -b feat/v$version
-git add operators/camel-k/$version
-git commit -s -m "operator camel-k ($version)"
+git add operators/camel-dashboard/$version
+git commit -s -m "operator camel-dashboard ($version)"
 git remote add upstream https://github.com/k8s-operatorhub/community-operators -f
 git pull --rebase upstream main
 git push --set-upstream origin feat/v$version
@@ -82,8 +68,8 @@ git push --set-upstream origin feat/v$version
 # Community operators PROD
 cd /tmp/operators/community-operators-prod
 git checkout -b feat/v$version
-git add operators/camel-k/$version
-git commit -s -m "operator camel-k ($version)"
+git add operators/camel-dashboard/$version
+git commit -s -m "operator camel-dashboard ($version)"
 git remote add upstream https://github.com/redhat-openshift-ecosystem/community-operators-prod -f
 git pull --rebase upstream main
 git push --set-upstream origin feat/v$version

@@ -22,4 +22,4 @@ if [ "$#" -lt 1 ]; then
     exit 1
 fi
 
-svn mv https://dist.apache.org/repos/dist/dev/camel/camel-k/$1/ https://dist.apache.org/repos/dist/release/camel/camel-k/$1/ -m "Promote release from dev to release"
+svn mv https://dist.apache.org/repos/dist/dev/camel/camel-dashboard/$1/ https://dist.apache.org/repos/dist/release/camel/camel-dashboard/$1/ -m "Promote release from dev to release"

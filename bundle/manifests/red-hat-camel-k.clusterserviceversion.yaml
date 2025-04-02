@@ -79,9 +79,9 @@ metadata:
           "kind": "IntegrationPlatform",
           "metadata": {
             "labels": {
-              "app": "camel-k"
+              "app": "camel-dashboard"
             },
-            "name": "camel-k"
+            "name": "camel-dashboard"
           },
           "spec": {
             "build": {},
@@ -177,7 +177,7 @@ metadata:
     capabilities: Full Lifecycle
     categories: Integration & Delivery
     certified: "false"
-    containerImage: registry-proxy.engineering.redhat.com/rh-osbs/integration-camel-k-rhel8-operator:1.10.10
+    containerImage: registry-proxy.engineering.redhat.com/rh-osbs/integration-camel-dashboard-rhel8-operator:1.10.10
     createdAt: "2025-03-10T15:33:06Z"
     description: Red Hat Integration - Camel K is a lightweight integration platform,
       born on Kubernetes, with serverless superpowers.
@@ -197,9 +197,9 @@ metadata:
     operators.operatorframework.io/builder: operator-sdk-v1.13.0+git
     operators.operatorframework.io/internal-objects: '["builds.camel.apache.org","integrationkits.camel.apache.org","camelcatalogs.camel.apache.org"]'
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v2
-    repository: https://github.com/apache/camel-k
+    repository: https://github.com/apache/camel-dashboard
     support: Camel
-  name: red-hat-camel-k-operator.v1.10.10
+  name: red-hat-camel-dashboard-operator.v1.10.10
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -254,9 +254,9 @@ spec:
     apiVersion: camel.apache.org/v1
     kind: IntegrationPlatform
     metadata:
-      name: camel-k
+      name: camel-dashboard
       labels:
-        app: "camel-k"
+        app: "camel-dashboard"
     ```
 
     An `IntegrationPlatform` resource is automatically created by default on OpenShift, so you can skip this step.
@@ -321,25 +321,25 @@ spec:
           - customresourcedefinitions
           verbs:
           - get
-        serviceAccountName: camel-k-operator
+        serviceAccountName: camel-dashboard-operator
       deployments:
-      - name: camel-k-operator
+      - name: camel-dashboard-operator
         spec:
           replicas: 1
           selector:
             matchLabels:
-              name: camel-k-operator
+              name: camel-dashboard-operator
           strategy:
             type: Recreate
           template:
             metadata:
               labels:
-                app: camel-k
+                app: camel-dashboard
                 app.kubernetes.io/component: operator
-                app.kubernetes.io/name: camel-k
+                app.kubernetes.io/name: camel-dashboard
                 app.kubernetes.io/version: 1.10.10
                 camel.apache.org/component: operator
-                name: camel-k-operator
+                name: camel-dashboard-operator
             spec:
               containers:
               - command:
@@ -351,9 +351,9 @@ spec:
                     fieldRef:
                       fieldPath: metadata.annotations['olm.targetNamespaces']
                 - name: OPERATOR_NAME
-                  value: camel-k
+                  value: camel-dashboard
                 - name: OPERATOR_ID
-                  value: camel-k
+                  value: camel-dashboard
                 - name: POD_NAME
                   valueFrom:
                     fieldRef:
@@ -362,7 +362,7 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.namespace
-                image: registry-proxy.engineering.redhat.com/rh-osbs/integration-camel-k-rhel8-operator:1.10.10
+                image: registry-proxy.engineering.redhat.com/rh-osbs/integration-camel-dashboard-rhel8-operator:1.10.10
                 imagePullPolicy: IfNotPresent
                 livenessProbe:
                   httpGet:
@@ -370,12 +370,12 @@ spec:
                     port: 8081
                   initialDelaySeconds: 20
                   periodSeconds: 10
-                name: camel-k-operator
+                name: camel-dashboard-operator
                 ports:
                 - containerPort: 8080
                   name: metrics
                 resources: {}
-              serviceAccountName: camel-k-operator
+              serviceAccountName: camel-dashboard-operator
       permissions:
       - rules:
         - apiGroups:
@@ -719,7 +719,7 @@ spec:
           - get
           - list
           - watch
-        serviceAccountName: camel-k-operator
+        serviceAccountName: camel-dashboard-operator
     strategy: deployment
   installModes:
   - supported: true
@@ -737,10 +737,10 @@ spec:
   - serverless
   - microservices
   labels:
-    name: camel-k-operator
+    name: camel-dashboard-operator
   links:
   - name: Apache Camel K source code repository
-    url: https://github.com/apache/camel-k
+    url: https://github.com/apache/camel-dashboard
   maintainers:
   - email: janstey@redhat.com
     name: Jon Anstey
@@ -749,8 +749,8 @@ spec:
   provider:
     name: Red Hat
     url: https://access.redhat.com/products/red-hat-integration
-  replaces: red-hat-camel-k-operator.v1.10.9
+  replaces: red-hat-camel-dashboard-operator.v1.10.9
   selector:
     matchLabels:
-      name: camel-k-operator
+      name: camel-dashboard-operator
   version: 1.10.10

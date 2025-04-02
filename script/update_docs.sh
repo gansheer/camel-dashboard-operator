@@ -60,7 +60,7 @@ echo "Camel Quarkus version: $CAMEL_QUARKUS_VERSION"
 echo "Quarkus version: $QUARKUS_VERSION"
 
 yq -i ".asciidoc.attributes.last-released-version = \"$LAST_RELEASED_VERSION\"" $location/../docs/antora.yml
-yq -i ".asciidoc.attributes.camel-k-runtime-version = \"$RUNTIME_VERSION\"" $location/../docs/antora.yml
+yq -i ".asciidoc.attributes.camel-dashboard-runtime-version = \"$RUNTIME_VERSION\"" $location/../docs/antora.yml
 yq -i ".asciidoc.attributes.camel-version = \"$CAMEL_VERSION\"" $location/../docs/antora.yml
 yq -i ".asciidoc.attributes.camel-docs-version = \"$CAMEL_DOCS_VERSION\"" $location/../docs/antora.yml
 yq -i ".asciidoc.attributes.camel-quarkus-version = \"$CAMEL_QUARKUS_VERSION\"" $location/../docs/antora.yml

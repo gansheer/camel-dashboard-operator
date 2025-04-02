@@ -27,9 +27,9 @@ mkdir -p $targetdir
 
 cd $rootdir/helm
 
-helm package ./camel-k --version $version
-mv camel-k-*.tgz $targetdir/
-helm repo index $targetdir --url https://apache.github.io/camel-k/charts/ --merge $helm_index
+helm package ./camel-dashboard --version $version
+mv camel-dashboard-*.tgz $targetdir/
+helm repo index $targetdir --url https://apache.github.io/camel-dashboard/charts/ --merge $helm_index
 # Required to prevent https://github.com/helm/helm/issues/7363
 mv $targetdir/* $targetdir/../.
 rm -rf $targetdir

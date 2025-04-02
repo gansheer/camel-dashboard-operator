@@ -97,11 +97,11 @@ if [ ! -f ${PACKAGE_YAML} ]; then
 fi
 
 #
-# Extract the camel-k channels
+# Extract the camel-dashboard channels
 #
 ${YQ} eval ". | select(.package == \"${PACKAGE}\" and .schema == \"olm.channel\")" ${INDEX_BASE_YAML} > ${CHANNELS_YAML}
 if [ $? != 0 ] || [ ! -f "${CHANNELS_YAML}" ]; then
-  echo "ERROR: Failed to extract camel-k entries from bundle catalog"
+  echo "ERROR: Failed to extract camel-dashboard entries from bundle catalog"
   exit 1
 fi
 
@@ -110,7 +110,7 @@ fi
 #
 ${YQ} -i eval ". | select(.package != \"${PACKAGE}\" or .schema != \"olm.channel\")" ${INDEX_BASE_YAML}
 if [ $? != 0 ]; then
-  echo "ERROR: Failed to remove camel-k channel entries from bundles catalog"
+  echo "ERROR: Failed to remove camel-dashboard channel entries from bundles catalog"
   exit 1
 fi
 

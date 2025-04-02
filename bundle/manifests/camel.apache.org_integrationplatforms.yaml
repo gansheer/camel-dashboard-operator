@@ -22,7 +22,7 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
   labels:
-    app: camel-k
+    app: camel-dashboard
   name: integrationplatforms.camel.apache.org
 spec:
   group: camel.apache.org
@@ -478,7 +478,7 @@ spec:
                           type: string
                         type: array
                       runtimeVersion:
-                        description: The camel-k-runtime version to use for the integration.
+                        description: The camel-dashboard-runtime version to use for the integration.
                           It overrides the default version set in the Integration
                           Platform.
                         type: string
@@ -647,7 +647,7 @@ spec:
                           the schedule is triggered externally by Kubernetes. A specific
                           customizer is activated for each specified component. E.g.
                           for the `timer` component, the `cron-timer` customizer is
-                          activated (it's present in the `org.apache.camel.k:camel-k-cron`
+                          activated (it's present in the `org.apache.camel.k:camel-dashboard-cron`
                           library). \n Supported components are currently: `cron`,
                           `timer` and `quartz`."
                         type: string
@@ -1149,7 +1149,7 @@ spec:
                           in newer versions of Knative, filtering is disabled by default.
                         type: boolean
                       namespaceLabel:
-                        description: 'Enables the camel-k-operator to set the "bindings.knative.dev/include=true"
+                        description: 'Enables the camel-dashboard-operator to set the "bindings.knative.dev/include=true"
                           label to the namespace As Knative requires this label to
                           perform injection of K_SINK URL into the service. If this
                           is false, the integration pod may start and fail, read the
@@ -2139,7 +2139,7 @@ spec:
                           type: string
                         type: array
                       runtimeVersion:
-                        description: The camel-k-runtime version to use for the integration.
+                        description: The camel-dashboard-runtime version to use for the integration.
                           It overrides the default version set in the Integration
                           Platform.
                         type: string
@@ -2308,7 +2308,7 @@ spec:
                           the schedule is triggered externally by Kubernetes. A specific
                           customizer is activated for each specified component. E.g.
                           for the `timer` component, the `cron-timer` customizer is
-                          activated (it's present in the `org.apache.camel.k:camel-k-cron`
+                          activated (it's present in the `org.apache.camel.k:camel-dashboard-cron`
                           library). \n Supported components are currently: `cron`,
                           `timer` and `quartz`."
                         type: string
@@ -2810,7 +2810,7 @@ spec:
                           in newer versions of Knative, filtering is disabled by default.
                         type: boolean
                       namespaceLabel:
-                        description: 'Enables the camel-k-operator to set the "bindings.knative.dev/include=true"
+                        description: 'Enables the camel-dashboard-operator to set the "bindings.knative.dev/include=true"
                           label to the namespace As Knative requires this label to
                           perform injection of K_SINK URL into the service. If this
                           is false, the integration pod may start and fail, read the

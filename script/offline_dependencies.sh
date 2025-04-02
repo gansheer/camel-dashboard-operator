@@ -75,15 +75,15 @@ pom=${offline_dir}/pom.xml
 pom_min=${offline_dir}/pom-min.xml
 
 ############# SETUP MAVEN
-# get the maven version used by camel-k-operator
-camelk_mvn_ver=$(curl -s https://raw.githubusercontent.com/apache/camel-k/release-2.3.x/build/Dockerfile|grep MAVEN_DEFAULT_VERSION= |cut -d\" -f2)
+# get the maven version used by camel-dashboard-operator
+camelk_mvn_ver=$(curl -s https://raw.githubusercontent.com/apache/camel-dashboard/release-2.3.x/build/Dockerfile|grep MAVEN_DEFAULT_VERSION= |cut -d\" -f2)
 # get the maven version set by the user from the parameters
 mvn_ver=$($mvnCmd --version |grep "Apache Maven"|awk '{print $3}')
-# the maven version executing the task MUST be exactly the same version as set by the camel-k-operator
+# the maven version executing the task MUST be exactly the same version as set by the camel-dashboard-operator
 if [ "${camelk_mvn_ver}" != "${mvn_ver}" ]; then
     # if the maven version is different, download the correct maven version
     url="https://archive.apache.org/dist/maven/maven-3/${camelk_mvn_ver}/binaries/apache-maven-${camelk_mvn_ver}-bin.tar.gz"
-    echo "WARNING: Wrong Maven version \"${mvn_ver}\", it must be the same as in camel-k operator: \"${camelk_mvn_ver}\""
+    echo "WARNING: Wrong Maven version \"${mvn_ver}\", it must be the same as in camel-dashboard operator: \"${camelk_mvn_ver}\""
     echo "         This script will attempt to download it from: ${url}"
     install_dir=`mktemp -d --suffix _maven`
     curl -fsSL ${url} | tar zx --strip-components=1 -C ${install_dir}
@@ -99,7 +99,7 @@ $mvnCmd --version | grep "Apache Maven"
 
 # setup the maven settings in case there is a custom maven repository url
 if [[ "${central_repo}" != "${remote_repo}" ]]; then
-    curl -sfSL https://raw.githubusercontent.com/apache/camel-k/release-2.3.x/script/maven-settings-offline-template.xml -o ${offline_dir}/maven-settings-offline-template.xml
+    curl -sfSL https://raw.githubusercontent.com/apache/camel-dashboard/release-2.3.x/script/maven-settings-offline-template.xml -o ${offline_dir}/maven-settings-offline-template.xml
     sed "s,_local-maven-proxy_,${remote_repo},g;/<mirrors>/,/<\/mirrors>/d" ${offline_dir}/maven-settings-offline-template.xml > ${offline_dir}/custom-maven-settings.xml
 
 fi
@@ -108,7 +108,7 @@ fi
 
 ############# SETUP CAMEL CATALOG
 echo "INFO: downloading catalog for Camel K Runtime ${runtime_version}"
-url=${remote_repo}/org/apache/camel/k/camel-k-catalog/${runtime_version}/camel-k-catalog-${runtime_version}-catalog.yaml
+url=${remote_repo}/org/apache/camel/k/camel-dashboard-catalog/${runtime_version}/camel-dashboard-catalog-${runtime_version}-catalog.yaml
 
 if [ -z "${skip_https}" ]; then
   # validate if there are certificate issues connecting with curl
@@ -133,8 +133,8 @@ curl -sfSL ${skip_https} ${url} -o ${catalog}
 ckr_version=$(yq .spec.runtime.version ${catalog})
 cq_version=$(yq '.spec.runtime.metadata."camel-quarkus.version"' $catalog)
 quarkus_version=$(yq '.spec.runtime.metadata."quarkus.version"' $catalog)
-jibVersion=$(curl -s https://raw.githubusercontent.com/apache/camel-k/release-2.3.x/pkg/util/jib/configuration.go|grep 'const JibMavenPluginVersionDefault'|cut -d\" -f2)
-jibLayerFilterVersion=$(curl -s https://raw.githubusercontent.com/apache/camel-k/release-2.3.x/pkg/util/jib/configuration.go|grep 'const JibLayerFilterExtensionMavenVersionDefault'|cut -d\" -f2)
+jibVersion=$(curl -s https://raw.githubusercontent.com/apache/camel-dashboard/release-2.3.x/pkg/util/jib/configuration.go|grep 'const JibMavenPluginVersionDefault'|cut -d\" -f2)
+jibLayerFilterVersion=$(curl -s https://raw.githubusercontent.com/apache/camel-dashboard/release-2.3.x/pkg/util/jib/configuration.go|grep 'const JibLayerFilterExtensionMavenVersionDefault'|cut -d\" -f2)
 
 echo "INFO: configuring offline dependencies for Camel K Runtime $ckr_version, Camel Quarkus $cq_version and Quarkus Platform version $quarkus_version"
 echo "INFO: preparing a base project to download maven dependencies..."
@@ -144,7 +144,7 @@ cat <<EOF > ${pom}
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.camel.k.integration</groupId>
-    <artifactId>camel-k-integration-offline</artifactId>
+    <artifactId>camel-dashboard-integration-offline</artifactId>
     <version>0.1</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -157,7 +157,7 @@ cat <<EOF > ${pom}
         <dependencies>
             <dependency>
                 <groupId>org.apache.camel.k</groupId>
-                <artifactId>camel-k-runtime-bom</artifactId>
+                <artifactId>camel-dashboard-runtime-bom</artifactId>
                 <version>$runtime_version</version>
                 <type>pom</type>
                 <scope>import</scope>
@@ -240,7 +240,7 @@ cat <<EOF > ${pom_min}
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.apache.camel.k.integration</groupId>
-    <artifactId>camel-k-integration-offline-min</artifactId>
+    <artifactId>camel-dashboard-integration-offline-min</artifactId>
     <version>0.1</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -253,7 +253,7 @@ cat <<EOF > ${pom_min}
         <dependencies>
             <dependency>
                 <groupId>org.apache.camel.k</groupId>
-                <artifactId>camel-k-runtime-bom</artifactId>
+                <artifactId>camel-dashboard-runtime-bom</artifactId>
                 <version>$runtime_version</version>
                 <type>pom</type>
                 <scope>import</scope>
@@ -349,11 +349,11 @@ fi
 $mvnCmd ${perf_params} ${silent} ${mvn_skip_ssl} ${settings_param} -Dmaven.repo.local=$offline_repo dependency:go-offline quarkus:go-offline -f ${pom}
 $mvnCmd ${perf_params} ${silent} ${mvn_skip_ssl} ${settings_param} -Dmaven.repo.local=$offline_repo package -f ${pom_min}
 
-# remove _remote.repositories as they interfere with the original repo resolver when running in the camel-k-operator pod
+# remove _remote.repositories as they interfere with the original repo resolver when running in the camel-dashboard-operator pod
 find $offline_repo -type f -name _remote.repositories -delete
 
 # we can bundle into a single archive now
-offline_file=${offline_dir}/camel-k-runtime-$runtime_version-maven-offline.tar.gz
+offline_file=${offline_dir}/camel-dashboard-runtime-$runtime_version-maven-offline.tar.gz
 echo "INFO: building ${offline_file} archive"
 tar -czf ${offline_file} -C $offline_repo .
 

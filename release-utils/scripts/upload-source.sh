@@ -28,11 +28,11 @@ version=$1
 mkdir $1/
 cd $1/
 
-wget https://github.com/apache/camel-k/archive/refs/tags/v$1.tar.gz -O camel-k-sources-$1.tar.gz
-cp ../../../camel-k-client-$1-* .
+wget https://github.com/apache/camel-dashboard/archive/refs/tags/v$1.tar.gz -O camel-dashboard-sources-$1.tar.gz
+cp ../../../camel-dashboard-client-$1-* .
 cp ../../../sbom.json .
 cd ../
 ./sign.sh $1/
-svn import $1/ https://dist.apache.org/repos/dist/dev/camel/camel-k/$1/ -m "Import camel-k release"
+svn import $1/ https://dist.apache.org/repos/dist/dev/camel/camel-dashboard/$1/ -m "Import camel-dashboard release"
 
 rm -rf $1/

@@ -33,8 +33,8 @@ rm -rf ./config
 cd ../../../
 
 # Importing helm CRDs
-#cat ./script/headers/yaml.txt > ./helm/camel-k/crds/camel-k-crds.yaml
-#kustomize build ./pkg/resources/config/crd/. >> ./helm/camel-k/crds/camel-k-crds.yaml
+#cat ./script/headers/yaml.txt > ./helm/camel-dashboard/crds/camel-dashboard-crds.yaml
+#kustomize build ./pkg/resources/config/crd/. >> ./helm/camel-dashboard/crds/camel-dashboard-crds.yaml
 
 deploy_crd_file() {
   source=$1
@@ -62,4 +62,4 @@ deploy_crd() {
   deploy_crd_file ./pkg/resources/config/crd/bases/camel.apache.org_"$plural".yaml
 }
 
-deploy_crd integration integrations
+deploy_crd app apps

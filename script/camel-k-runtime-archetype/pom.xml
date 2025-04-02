@@ -18,7 +18,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.camel.k.integration</groupId>
-  <artifactId>camel-k-integration</artifactId>
+  <artifactId>camel-dashboard-integration</artifactId>
   <version>2.0.0</version>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,7 +31,7 @@
     <dependencies>
       <dependency>
         <groupId>org.apache.camel.k</groupId>
-        <artifactId>camel-k-runtime-bom</artifactId>
+        <artifactId>camel-dashboard-runtime-bom</artifactId>
         <version>${runtime.version}</version>
         <type>pom</type>
         <scope>import</scope>
@@ -45,7 +45,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.camel.k</groupId>
-      <artifactId>camel-k-runtime</artifactId>
+      <artifactId>camel-dashboard-runtime</artifactId>
     </dependency>
   </dependencies>
   <repositories></repositories>

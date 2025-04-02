@@ -18,12 +18,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: camel-k-operator
+  name: camel-dashboard-operator
 spec:
   template:
     spec:
       containers:
-        - name: camel-k-operator
+        - name: camel-dashboard-operator
           resources:
             #
             # Add custom requirements on hardware resource allocation

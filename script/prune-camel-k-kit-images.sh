@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# list and remove dangling camel-k kit images
+# list and remove dangling camel-dashboard kit images
 
 remove=0
 verbose=0
@@ -69,7 +69,7 @@ else
         echo "> Delete Container Images"
         echo $dangling|while read imgaddr; do
             ns=$(echo $imgaddr|awk -F '/' '{print $2}');
-            kit=$(echo $imgaddr|awk -F '/' '{print $3}'|sed 's/camel-k-//g');
+            kit=$(echo $imgaddr|awk -F '/' '{print $3}'|sed 's/camel-dashboard-//g');
             kubectl -n $ns delete ik/$kit
             imgid=$(docker images|grep $imgaddr|awk '{print $3}')
             docker rmi $imgid

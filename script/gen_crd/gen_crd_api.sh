@@ -17,7 +17,7 @@
 
 location=$(dirname $0)
 rootdir=$location/../..
-crd_file_camel=$rootdir/docs/modules/ROOT/partials/apis/camel-k-crds.adoc
+crd_file_camel=$rootdir/docs/modules/ROOT/partials/apis/camel-dashboard-crds.adoc
 
 # Until the pull req below is merged upstream, we need to use a self-hosted
 # version of gen-crd-api-reference-docs:
@@ -31,7 +31,7 @@ echo "Generating CRD API documentation..."
 # to run a local copy use something like
 #go run /Users/david/projects/camel/gen-crd-api-reference-docs/main.go \
 #you will probably need to comment out use of blackfriday.
-go run github.com/tadayosi/gen-crd-api-reference-docs@v0.4.0-camel-k-2 \
+go run github.com/tadayosi/gen-crd-api-reference-docs@v0.4.0-camel-dashboard-2 \
     -config $location/gen-crd-api-config.json \
     -template-dir $location/template \
     -api-dir "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1" \

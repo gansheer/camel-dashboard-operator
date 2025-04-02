@@ -36,13 +36,13 @@ fi
 # Refresh catalog sets. We can clean any leftover as well.
 rm -f ${rootdir}/pkg/resources/resources/camel-catalog-*
 
-mvn -q dependency:copy -Dartifact="org.apache.camel.k:camel-k-catalog:$runtime_version:yaml:catalog" \
+mvn -q dependency:copy -Dartifact="org.apache.camel.k:camel-dashboard-catalog:$runtime_version:yaml:catalog" \
   -Dmdep.useBaseVersion=true \
   -DoutputDirectory=${rootdir}/resources/ \
   -s $location/maven-settings.xml \
   -Papache
 
-if [ -f "${rootdir}/resources/camel-k-catalog-${runtime_version}-catalog.yaml" ]; then
-    mv ${rootdir}/resources/camel-k-catalog-"${runtime_version}"-catalog.yaml ${rootdir}/pkg/resources/resources/camel-catalog-"${runtime_version}".yaml
+if [ -f "${rootdir}/resources/camel-dashboard-catalog-${runtime_version}-catalog.yaml" ]; then
+    mv ${rootdir}/resources/camel-dashboard-catalog-"${runtime_version}"-catalog.yaml ${rootdir}/pkg/resources/resources/camel-catalog-"${runtime_version}".yaml
 fi
 

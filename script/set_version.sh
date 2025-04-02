@@ -24,7 +24,7 @@ fi
 
 location=$(dirname $0)
 version=$1
-image_name=${2:-docker.io\/apache\/camel-k}
+image_name=${2:-docker.io\/apache\/camel-dashboard}
 sanitized_image_name=${image_name//\//\\\/}
 k8s_version_label="app.kubernetes.io\/version"
 
@@ -40,7 +40,7 @@ do
 done
 
 # Update helm chart
-sed -i -r "s/image: .*/image: ${sanitized_image_name}:${version}/" $location/../helm/camel-k/values.yaml
-sed -i -r "s/appVersion:\s([0-9]+[a-zA-Z0-9\-\.].*).*/appVersion: ${version}/" $location/../helm/camel-k/Chart.yaml
+sed -i -r "s/image: .*/image: ${sanitized_image_name}:${version}/" $location/../helm/camel-dashboard/values.yaml
+sed -i -r "s/appVersion:\s([0-9]+[a-zA-Z0-9\-\.].*).*/appVersion: ${version}/" $location/../helm/camel-dashboard/Chart.yaml
 
 echo "Camel K version set to: $version and image name to: $image_name"

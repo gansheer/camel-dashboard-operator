@@ -22,7 +22,7 @@ metadata:
     controller-gen.kubebuilder.io/version: v0.6.1
   creationTimestamp: null
   labels:
-    app: camel-k
+    app: camel-dashboard
   name: builds.camel.apache.org
 spec:
   group: camel.apache.org

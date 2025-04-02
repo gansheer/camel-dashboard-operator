@@ -31,11 +31,11 @@ const (
 
 // +genclient
 // +kubebuilder:object:root=true
-// +kubebuilder:resource:path=integrations,scope=Namespaced,shortName=it,categories=kamel;camel
+// +kubebuilder:resource:path=apps,scope=Namespaced,shortName=capp,categories=camel
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
 
-// App is the Schema for the integrations API.
+// App is the Schema for the Camel Applications API.
 type App struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -46,12 +46,11 @@ type App struct {
 	Status AppStatus `json:"status,omitempty"`
 }
 
-// AppSpec specifies the configuration of an Integration.
-// The Integration will be watched by the operator which will be in charge to run the related application, according to the configuration specified.
+// AppSpec specifies the configuration of an App.
 type AppSpec struct {
 }
 
-// AppStatus defines the observed state of Integration.
+// AppStatus defines the observed state of an App.
 type AppStatus struct {
 	// the actual phase
 	Phase AppPhase `json:"phase,omitempty"`
@@ -59,7 +58,7 @@ type AppStatus struct {
 
 // +kubebuilder:object:root=true
 
-// AppList contains a list of Integration.
+// AppList contains a list of Apps.
 type AppList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
