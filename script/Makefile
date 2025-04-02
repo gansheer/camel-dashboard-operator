@@ -233,11 +233,11 @@ codegen-tools-install:
 	go install k8s.io/code-generator/cmd/informer-gen@$(CODEGEN_VERSION)
 	go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_GEN_VERSION)
 
-build: codegen test build-kamel
+build: codegen test build-camel-dashboard
 
-build-platform: build build-kamel-platform
+build-platform: build build-camel-dashboard-platform
 
-ci-build: clean codegen set-version check-licenses dir-licenses build-kamel cross-compile
+ci-build: clean codegen set-version check-licenses dir-licenses build-camel-dashboard cross-compile
 
 do-build: gotestfmt-install
 ifeq ($(DO_TEST_PREBUILD),true)
@@ -261,19 +261,19 @@ else
 	@echo "####### Skipping unit test..."
 endif
 
-build-kamel:
-	@echo "####### Building kamel CLI for linux/$(IMAGE_ARCH) architecture..."
-	CGO_ENABLED=0 GOOS=linux GOARCH=$(IMAGE_ARCH) go build $(GOFLAGS) -o build/_output/bin/kamel-$(IMAGE_ARCH) ./cmd/kamel/*.go
+build-camel-dashboard:
+	@echo "####### Building camel-dashboard CLI for linux/$(IMAGE_ARCH) architecture..."
+	CGO_ENABLED=0 GOOS=linux GOARCH=$(IMAGE_ARCH) go build $(GOFLAGS) -o build/_output/bin/camel-dashboard-$(IMAGE_ARCH) ./cmd/camel-dashboard/*.go
 	# Symbolic link to a local CLI
-	ln -sf build/_output/bin/kamel-$(IMAGE_ARCH) ./kamel
+	ln -sf build/_output/bin/camel-dashboard-$(IMAGE_ARCH) ./camel-dashboard
 
-build-kamel-platform:
+build-camel-dashboard-platform:
 # Perform only when running on OS other than linux
 ifneq ($(shell uname -s 2>/dev/null || echo Unknown),Linux)
-	@echo "####### Building platform specific kamel CLI for $(IMAGE_ARCH) architecture..."
-	CGO_ENABLED=0 GOARCH=$(IMAGE_ARCH) go build $(GOFLAGS) -o build/_output/bin/kamel-$(IMAGE_ARCH) ./cmd/kamel/*.go
+	@echo "####### Building platform specific camel-dashboard CLI for $(IMAGE_ARCH) architecture..."
+	CGO_ENABLED=0 GOARCH=$(IMAGE_ARCH) go build $(GOFLAGS) -o build/_output/bin/camel-dashboard-$(IMAGE_ARCH) ./cmd/camel-dashboard/*.go
 	# Symbolic link to a local CLI
-	ln -sf build/_output/bin/kamel-$(IMAGE_ARCH) ./kamel
+	ln -sf build/_output/bin/camel-dashboard-$(IMAGE_ARCH) ./camel-dashboard
 endif
 
 clean:
@@ -283,7 +283,6 @@ clean:
 	#
 	GO111MODULE=off go clean
 	rm -f camel-dashboard
-	rm -f kamel
 	rm -f *.test
 	rm -rf $(LOCALBIN)
 	rm -rf build/_maven_output
@@ -347,7 +346,7 @@ endif
 
 DOCKER_TAG := $(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$(BASE_IMAGE_VERSION)-$(IMAGE_ARCH)
 
-images: build image-build build-kamel-platform
+images: build image-build build-camel-dashboard-platform
 
 image-build:
 ifneq (,$(findstring SNAPSHOT,$(DEFAULT_RUNTIME_VERSION)))
@@ -488,7 +487,7 @@ release-helm:
 	./script/set_version.sh ${VERSION}
 	./script/release_helm.sh ${VERSION}
 
-.PHONY: do-build build build-kamel build-kamel-platform dep codegen images images-push image-build test check clean release cross-compile package-examples set-version git-tag check-licenses release-helm release-staging release-nightly get-staging-repo get-version
+.PHONY: do-build build build-camel-dashboard build-camel-dashboard-platform dep codegen images images-push image-build test check clean release cross-compile package-examples set-version git-tag check-licenses release-helm release-staging release-nightly get-staging-repo get-version
 .PHONY: kubectl kustomize operator-sdk opm
 
 kubectl:
@@ -543,7 +542,7 @@ endif
 
 # - Have to copy pkg/apis since it is a module in its own right
 # - No way to add a licence header to the CRD other then post-script
-BUNDLE_CAMEL_APIS = v1
+BUNDLE_CAMEL_APIS = v1alpha1
 
 $(BUNDLE_CAMEL_APIS): operator-sdk
 	@# Clean up api directory, copy over fresh version

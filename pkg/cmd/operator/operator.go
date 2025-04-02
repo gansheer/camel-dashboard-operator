@@ -225,7 +225,7 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 	defer installCancel()
 	install.OperatorStartupOptionalTools(installCtx, bootstrapClient, watchNamespace, operatorNamespace, log)
 
-	synthEnvVal, synth := os.LookupEnv("CAMEL_K_SYNTHETIC_INTEGRATIONS")
+	synthEnvVal, synth := os.LookupEnv("CAMEL_APP_IMPORT")
 	if synth && synthEnvVal == "true" {
 		log.Info("Starting the synthetic Integration manager")
 		exitOnError(synthetic.ManageSyntheticIntegrations(ctx, ctrlClient, mgr.GetCache()), "synthetic Integration manager error")

@@ -39,8 +39,4 @@ do
   sed -i -r "s/containerImage: .*/containerImage: ${sanitized_image_name}:${version}/" $f
 done
 
-# Update helm chart
-sed -i -r "s/image: .*/image: ${sanitized_image_name}:${version}/" $location/../helm/camel-dashboard/values.yaml
-sed -i -r "s/appVersion:\s([0-9]+[a-zA-Z0-9\-\.].*).*/appVersion: ${version}/" $location/../helm/camel-dashboard/Chart.yaml
-
-echo "Camel K version set to: $version and image name to: $image_name"
+echo "Camel Dashboard version set to: $version and image name to: $image_name"

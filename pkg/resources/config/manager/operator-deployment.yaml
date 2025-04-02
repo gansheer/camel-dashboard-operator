@@ -49,7 +49,7 @@ spec:
           image: docker.io/apache/camel-dashboard:2.7.0-SNAPSHOT
           imagePullPolicy: IfNotPresent
           command:
-            - kamel
+            - camel-dashboard
             - operator
           ports:
             - containerPort: 8080
@@ -63,7 +63,7 @@ spec:
               value: "camel-dashboard"
             - name: OPERATOR_ID
               value: "camel-dashboard"
-            - name: CAMEL_K_SYNTHETIC_INTEGRATIONS
+            - name: CAMEL_APP_IMPORT
               value: "true"
             - name: POD_NAME
               valueFrom:

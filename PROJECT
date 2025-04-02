@@ -1,6 +1,6 @@
 domain: apache.org
 layout: go.kubebuilder.io/v2
-projectName: camel-dashboard-operator
+projectName: camel-dashboard
 repo: github.com/squakez/camel-dashboard-operator
 resources:
 - group: camel
