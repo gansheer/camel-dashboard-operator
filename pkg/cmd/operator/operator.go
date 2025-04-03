@@ -69,19 +69,18 @@ import (
 var log = logutil.Log.WithName("cmd")
 
 func printVersion() {
-	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
-	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("Camel Dashboard Operator Version: %v", defaults.Version))
-	log.Info(fmt.Sprintf("Camel Dashboard Git Commit: %v", defaults.GitCommit))
-	log.Info(fmt.Sprintf("Camel Dashboard Operator ID: %v", defaults.OperatorID()))
+	log.Infof("Go Version: %s", runtime.Version())
+	log.Infof("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH)
+	log.Infof("Camel Dashboard Operator Version: %v", defaults.Version)
+	log.Infof("Camel Dashboard Git Commit: %v", defaults.GitCommit)
+	log.Infof("Camel Dashboard Operator ID: %v", defaults.OperatorID())
 
 	// Will only appear if DEBUG level has been enabled using the env var LOG_LEVEL
 	log.Debug("*** DEBUG level messages will be logged ***")
 }
 
-// Run starts the Camel K operator.
+// Run starts the Camel Dashboard operator.
 func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID string) {
-
 	flag.Parse()
 
 	// The logger instantiated here can be changed to any logger
@@ -118,9 +117,9 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 		o.Development = false
 		o.Level = zap.NewAtomicLevelAt(logLevel)
 	}))
-
 	klog.SetLogger(log.AsLogger())
 
+	log.Infof("Starting the operator with leaderElection parameters %t: %s", leaderElection, leaderElectionID)
 	_, err := maxprocs.Set(maxprocs.Logger(func(f string, a ...interface{}) { log.Info(fmt.Sprintf(f, a)) }))
 	if err != nil {
 		log.Error(err, "failed to set GOMAXPROCS from cgroups")
@@ -163,9 +162,9 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 		log.Info("Leader election is disabled!")
 	}
 
-	hasIntegrationLabel, err := labels.NewRequirement(v1alpha1.AppLabel, selection.Exists, []string{})
-	exitOnError(err, "cannot create Integration label selector")
-	labelsSelector := labels.NewSelector().Add(*hasIntegrationLabel)
+	hasAppLabel, err := labels.NewRequirement(v1alpha1.AppLabel, selection.Exists, []string{})
+	exitOnError(err, "cannot create App label selector")
+	labelsSelector := labels.NewSelector().Add(*hasAppLabel)
 
 	selector := cache.ByObject{
 		Label: labelsSelector,
@@ -227,9 +226,9 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 	synthEnvVal, synth := os.LookupEnv("CAMEL_APP_IMPORT")
 	if synth && synthEnvVal == "true" {
 		log.Info("Starting the Camel App Syntentic manager")
-		exitOnError(synthetic.ManageSyntheticCamelApps(ctx, ctrlClient, mgr.GetCache()), "synthetic Integration manager error")
+		exitOnError(synthetic.ManageSyntheticCamelApps(ctx, ctrlClient, mgr.GetCache()), "Camel App Syntentic manager error")
 	} else {
-		log.Info("Synthetic Integration manager not configured, skipping")
+		log.Info("Camel App Syntentic manager not configured, skipping")
 	}
 	log.Info("Starting the manager")
 	exitOnError(mgr.Start(ctx), "manager exited non-zero")

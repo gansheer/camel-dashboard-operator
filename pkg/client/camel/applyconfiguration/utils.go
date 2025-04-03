@@ -37,6 +37,14 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &camelv1alpha1.AppApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("AppStatus"):
 		return &camelv1alpha1.AppStatusApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ExchangeInfo"):
+		return &camelv1alpha1.ExchangeInfoApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("ObservabilityServiceInfo"):
+		return &camelv1alpha1.ObservabilityServiceInfoApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("PodInfo"):
+		return &camelv1alpha1.PodInfoApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("RuntimeInfo"):
+		return &camelv1alpha1.RuntimeInfoApplyConfiguration{}
 
 	}
 	return nil

@@ -36,7 +36,7 @@ func NewApp(namespace string, name string) App {
 	return App{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: SchemeGroupVersion.String(),
-			Kind:       IntegrationKind,
+			Kind:       AppKind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -49,7 +49,7 @@ func NewAppList() AppList {
 	return AppList{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: SchemeGroupVersion.String(),
-			Kind:       IntegrationKind,
+			Kind:       AppKind,
 		},
 	}
 }

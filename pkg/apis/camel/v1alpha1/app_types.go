@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	// IntegrationKind --.
-	IntegrationKind string = "Integration"
+	// AppKind --.
+	AppKind string = "App"
 )
 
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
@@ -32,6 +32,10 @@ const (
 // +genclient
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:path=apps,scope=Namespaced,shortName=capp,categories=camel
+// +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`,description="The Camel App phase"
+// +kubebuilder:printcolumn:name="Image",type=string,JSONPath=`.status.image`,description="The Camel App image"
+// +kubebuilder:printcolumn:name="Replicas",type=string,JSONPath=`.status.replicas`,description="The Camel App Pods"
+// +kubebuilder:printcolumn:name="Info",type=string,JSONPath=`.status.info`,description="The Camel App info"
 // +kubebuilder:subresource:status
 // +kubebuilder:storageversion
 
@@ -40,9 +44,9 @@ type App struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	// the desired Integration specification
+	// the desired App specification
 	Spec AppSpec `json:"spec,omitempty"`
-	// the status of the Integration
+	// the status of the App
 	Status AppStatus `json:"status,omitempty"`
 }
 
@@ -54,6 +58,14 @@ type AppSpec struct {
 type AppStatus struct {
 	// the actual phase
 	Phase AppPhase `json:"phase,omitempty"`
+	// the image used to run the application
+	Image string `json:"image,omitempty"`
+	// Some information about the pods backing the application
+	Pods []PodInfo `json:"pods,omitempty"`
+	// The number of replicas (pods running)
+	Replicas *int32 `json:"replicas,omitempty"`
+	// The number of replicas (pods running)
+	Info string `json:"info,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -67,3 +79,51 @@ type AppList struct {
 
 // AppPhase --.
 type AppPhase string
+
+// PodInfo contains a set of information related to the Pod running the Camel application.
+type PodInfo struct {
+	// the Pod name
+	Name string `json:"name,omitempty"`
+	// the Pod ip
+	InternalIP string `json:"internalIp,omitempty"`
+	// the Pod status
+	Status string `json:"status,omitempty"`
+	// Observability services information
+	ObservabilityService ObservabilityServiceInfo `json:"observe,omitempty"`
+	// Some information about the Camel runtime
+	Runtime *RuntimeInfo `json:"runtime,omitempty"`
+}
+
+// RuntimeInfo contains a set of information related to the Camel application runtime.
+type RuntimeInfo struct {
+	// the name of Camel context
+	ContextName string `json:"contextName,omitempty"`
+	// the runtime provider
+	RuntimeProvider string `json:"runtimeProvider,omitempty"`
+	// the runtime version
+	RuntimeVersion string `json:"runtimeVersion,omitempty"`
+	// the Camel core version
+	CamelVersion string `json:"camelVersion,omitempty"`
+	// Information about the exchange
+	Exchange ExchangeInfo `json:"exchange,omitempty"`
+}
+
+// ObservabilityServiceInfo contains the endpoints that can be possibly used to scrape more information.
+type ObservabilityServiceInfo struct {
+	// the health endpoint
+	HealthEndpoint string `json:"healthEndpoint,omitempty"`
+	// the metrics endpoint
+	MetricsEndpoint string `json:"metricsEndpoint,omitempty"`
+}
+
+// ExchangeInfo contains the endpoints that can be possibly used to scrape more information.
+type ExchangeInfo struct {
+	// The total number of exchanges
+	Total int `json:"total,omitempty"`
+	// The total number of exchanges succeeded
+	Succeed int `json:"succeed,omitempty"`
+	// The total number of exchanges failed
+	Failed int `json:"failed,omitempty"`
+	// The total number of exchanges pending (in Camel jargon, inflight exchanges)
+	Pending int `json:"pending,omitempty"`
+}

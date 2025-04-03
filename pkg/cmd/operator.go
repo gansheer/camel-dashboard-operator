@@ -35,8 +35,8 @@ func newCmdOperator(rootCmdOptions *RootCmdOptions) (*cobra.Command, *operatorCm
 
 	cmd := cobra.Command{
 		Use:     "operator",
-		Short:   "Run the Camel K operator",
-		Long:    `Run the Camel K operator`,
+		Short:   "Run the Camel Dashboard operator",
+		Long:    `Run the Camel Dashboard operator`,
 		Hidden:  true,
 		PreRunE: decode(&options, rootCmdOptions.Flags),
 		Run:     options.run,
@@ -58,7 +58,6 @@ type operatorCmdOptions struct {
 }
 
 func (o *operatorCmdOptions) run(_ *cobra.Command, _ []string) {
-
 	leaderElectionID := o.LeaderElectionID
 	if leaderElectionID == "" {
 		if defaults.OperatorID() != "" {
@@ -68,5 +67,7 @@ func (o *operatorCmdOptions) run(_ *cobra.Command, _ []string) {
 		}
 	}
 
-	operator.Run(o.HealthPort, o.MonitoringPort, o.LeaderElection, leaderElectionID)
+	// TODO fix this
+	// operator.Run(o.HealthPort, o.MonitoringPort, o.LeaderElection, leaderElectionID)
+	operator.Run(defaultHealthPort, defaultMonitoringPort, true, leaderElectionID)
 }

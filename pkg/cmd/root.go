@@ -31,10 +31,6 @@ import (
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
 )
 
-const kamelCommandLongDescription = `Apache Camel K is a lightweight integration platform, born on Kubernetes, with serverless
-superpowers.
-`
-
 // RootCmdOptions --.
 //
 //nolint:containedctx
@@ -74,9 +70,9 @@ func NewKamelCommand(ctx context.Context) (*cobra.Command, error) {
 func kamelPreAddCommandInit(options *RootCmdOptions) *cobra.Command {
 	cmd := cobra.Command{
 		PersistentPreRunE: options.preRun,
-		Use:               "kamel",
-		Short:             "Kamel is a awesome client tool for running Apache Camel integrations natively on Kubernetes",
-		Long:              kamelCommandLongDescription,
+		Use:               "camel-dashboard",
+		Short:             "camel-dashboard",
+		Long:              "camel-dashboard",
 		SilenceUsage:      true,
 	}
 

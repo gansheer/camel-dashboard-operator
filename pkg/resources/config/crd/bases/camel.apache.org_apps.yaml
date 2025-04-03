@@ -35,7 +35,24 @@ spec:
     singular: app
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: The Camel App phase
+      jsonPath: .status.phase
+      name: Phase
+      type: string
+    - description: The Camel App image
+      jsonPath: .status.image
+      name: Image
+      type: string
+    - description: The Camel App Pods
+      jsonPath: .status.replicas
+      name: Replicas
+      type: string
+    - description: The Camel App info
+      jsonPath: .status.info
+      name: Info
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: App is the Schema for the Camel Applications API.
@@ -58,14 +75,84 @@ spec:
           metadata:
             type: object
           spec:
-            description: the desired Integration specification
+            description: the desired App specification
             type: object
           status:
-            description: the status of the Integration
+            description: the status of the App
             properties:
+              image:
+                description: the image used to run the application
+                type: string
+              info:
+                description: The number of replicas (pods running)
+                type: string
               phase:
                 description: the actual phase
                 type: string
+              pods:
+                description: Some information about the pods backing the application
+                items:
+                  description: PodInfo contains a set of information related to the
+                    Pod running the Camel application.
+                  properties:
+                    internalIp:
+                      description: the Pod ip
+                      type: string
+                    name:
+                      description: the Pod name
+                      type: string
+                    observe:
+                      description: Observability services information
+                      properties:
+                        healthEndpoint:
+                          description: the health endpoint
+                          type: string
+                        metricsEndpoint:
+                          description: the metrics endpoint
+                          type: string
+                      type: object
+                    runtime:
+                      description: Some information about the Camel runtime
+                      properties:
+                        camelVersion:
+                          description: the Camel core version
+                          type: string
+                        contextName:
+                          description: the name of Camel context
+                          type: string
+                        exchange:
+                          description: Information about the exchange
+                          properties:
+                            failed:
+                              description: The total number of exchanges failed
+                              type: integer
+                            pending:
+                              description: The total number of exchanges pending (in
+                                Camel jargon, inflight exchanges)
+                              type: integer
+                            succeed:
+                              description: The total number of exchanges succeeded
+                              type: integer
+                            total:
+                              description: The total number of exchanges
+                              type: integer
+                          type: object
+                        runtimeProvider:
+                          description: the runtime provider
+                          type: string
+                        runtimeVersion:
+                          description: the runtime version
+                          type: string
+                      type: object
+                    status:
+                      description: the Pod status
+                      type: string
+                  type: object
+                type: array
+              replicas:
+                description: The number of replicas (pods running)
+                format: int32
+                type: integer
             type: object
         type: object
     served: true

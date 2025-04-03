@@ -32,6 +32,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientgocache "k8s.io/client-go/tools/cache"
+	"knative.dev/pkg/ptr"
 	"knative.dev/serving/pkg/apis/serving"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -79,9 +80,6 @@ func ManageSyntheticCamelApps(ctx context.Context, c client.Client, cache cache.
 	return nil
 }
 
-// TODO: refactor this code and remove lint exclusion
-//
-//nolint:nestif
 func onAdd(ctx context.Context, c client.Client, ctrlObj ctrl.Object) {
 	log.Infof("Detected a new %s resource named %s in namespace %s",
 		ctrlObj.GetObjectKind().GroupVersionKind().Kind, ctrlObj.GetName(), ctrlObj.GetNamespace())
@@ -101,7 +99,7 @@ func onAdd(ctx context.Context, c client.Client, ctrlObj ctrl.Object) {
 			log.Errorf(err, "Some error happened while loading a synthetic Camel Application %s", appName)
 		}
 	} else {
-		log.Infof("Synthetic Camel Application %s is in phase %s. Skipping.", appName, app.Status.Phase)
+		log.Infof("Synthetic Camel Application %s (phase %s) already imported. Skipping.", appName, app.Status.Phase)
 	}
 }
 
@@ -148,8 +146,18 @@ func getSyntheticCamelApp(ctx context.Context, c client.Client, namespace, name 
 	return &app, err
 }
 
-func createSyntheticCamelApp(ctx context.Context, c client.Client, it *v1alpha1.App) error {
-	return c.Create(ctx, it, ctrl.FieldOwner("camel-dashboard-operator"))
+func createSyntheticCamelApp(ctx context.Context, c client.Client, app *v1alpha1.App) error {
+	newStatus := app.Status
+	app.Status = v1alpha1.AppStatus{}
+	if err := c.Create(ctx, app, ctrl.FieldOwner("camel-dashboard-operator")); err != nil {
+		return err
+	}
+
+	// TODO this is required just for the POC to update status right after a resource is created
+	// The reconciliation should take care of it instead
+	target := app.DeepCopy()
+	target.Status = newStatus
+	return c.Status().Patch(ctx, target, ctrl.MergeFrom(app))
 }
 
 func deleteSyntheticCamelApp(ctx context.Context, c client.Client, namespace, name string) error {
@@ -203,6 +211,22 @@ func (app *nonManagedCamelDeployment) CamelApp() *v1alpha1.App {
 		},
 	}
 	newApp.SetOwnerReferences(references)
+	// TODO: all the code above is (still) a simulation.
+	// We should expect this to be correctly handled by a proper reconciliation cycle instead
+	deployImage := app.deploy.Spec.Template.Spec.Containers[0].Image
+	appPhase := getAppPhase()
+	newApp.Status.Phase = appPhase
+	newApp.Status.Image = deployImage
+	newApp.Status.Pods = getPods(deployImage, appPhase)
+	newApp.Status.Replicas = ptr.Int32(int32(len(newApp.Status.Pods)))
+	if newApp.Status.Pods[0].Runtime != nil {
+		newApp.Status.Info = fmt.Sprintf(
+			"Runtime Provider:%s, Runtime Version:%s, Camel Version: %s",
+			newApp.Status.Pods[0].Runtime.RuntimeProvider,
+			newApp.Status.Pods[0].Runtime.RuntimeVersion,
+			newApp.Status.Pods[0].Runtime.CamelVersion,
+		)
+	}
 	return &newApp
 }
 
