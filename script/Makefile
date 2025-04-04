@@ -84,7 +84,7 @@ CSV_NAME := $(PACKAGE).v$(CSV_VERSION)
 # Final CSV name that replaces the name required by the operator-sdk
 # Has to be replaced after the bundle has been generated
 CSV_PRODUCTION_NAME := $(LAST_RELEASED_IMAGE_NAME).v$(CSV_VERSION)
-CSV_DISPLAY_NAME := Camel K Operator
+CSV_DISPLAY_NAME := Camel Dashboard Operator
 CSV_SUPPORT := Camel
 CSV_REPLACES := $(LAST_RELEASED_IMAGE_NAME).v$(LAST_RELEASED_VERSION)
 CSV_FILENAME := $(PACKAGE).clusterserviceversion.yaml

@@ -26,7 +26,6 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"time"
 
 	"k8s.io/klog/v2"
 
@@ -58,7 +57,6 @@ import (
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
 	"github.com/squakez/camel-dashboard-operator/pkg/controller"
 	"github.com/squakez/camel-dashboard-operator/pkg/controller/synthetic"
-	"github.com/squakez/camel-dashboard-operator/pkg/install"
 	"github.com/squakez/camel-dashboard-operator/pkg/platform"
 	"github.com/squakez/camel-dashboard-operator/pkg/util"
 	"github.com/squakez/camel-dashboard-operator/pkg/util/defaults"
@@ -217,11 +215,6 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 	ctrlClient, err := client.FromManager(mgr)
 	exitOnError(err, "")
 	exitOnError(controller.AddToManager(ctx, mgr, ctrlClient), "")
-
-	log.Info("Installing operator resources")
-	installCtx, installCancel := context.WithTimeout(ctx, 1*time.Minute)
-	defer installCancel()
-	install.OperatorStartupOptionalTools(installCtx, bootstrapClient, watchNamespace, operatorNamespace, log)
 
 	synthEnvVal, synth := os.LookupEnv("CAMEL_APP_IMPORT")
 	if synth && synthEnvVal == "true" {

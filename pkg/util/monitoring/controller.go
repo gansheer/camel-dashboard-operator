@@ -103,8 +103,8 @@ func resultLabelFor(res reconcile.Result, err error) string {
 
 var loopDuration = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
-		Name: "camel_k_reconciliation_duration_seconds",
-		Help: "Camel K reconciliation loop duration",
+		Name: "camel_dashboard_reconciliation_duration_seconds",
+		Help: "Camel Dashboard reconciliation loop duration",
 		Buckets: []float64{
 			0.25 * time.Second.Seconds(),
 			0.5 * time.Second.Seconds(),
