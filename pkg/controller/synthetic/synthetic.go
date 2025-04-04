@@ -32,7 +32,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientgocache "k8s.io/client-go/tools/cache"
-	"knative.dev/pkg/ptr"
+	"k8s.io/utils/ptr"
 	"knative.dev/serving/pkg/apis/serving"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -217,9 +217,9 @@ func (app *nonManagedCamelDeployment) CamelApp() *v1alpha1.App {
 	appPhase := getAppPhase()
 	newApp.Status.Phase = appPhase
 	newApp.Status.Image = deployImage
-	newApp.Status.Pods = getPods(deployImage, appPhase)
-	newApp.Status.Replicas = ptr.Int32(int32(len(newApp.Status.Pods)))
-	if newApp.Status.Pods[0].Runtime != nil {
+	newApp.Status.Pods = getPods(deployImage, appPhase, app.deploy.Spec.Replicas)
+	newApp.Status.Replicas = app.deploy.Spec.Replicas
+	if ptr.Deref(app.deploy.Spec.Replicas, 0) > 0 && newApp.Status.Pods[0].Runtime != nil {
 		newApp.Status.Info = fmt.Sprintf(
 			"Runtime Provider:%s, Runtime Version:%s, Camel Version: %s",
 			newApp.Status.Pods[0].Runtime.RuntimeProvider,

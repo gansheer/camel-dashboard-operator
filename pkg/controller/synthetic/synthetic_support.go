@@ -43,10 +43,9 @@ func randRange(min, max int) int {
 	return rand.IntN(max-min) + min
 }
 
-func getPods(image string, status v1alpha1.AppPhase) []v1alpha1.PodInfo {
+func getPods(image string, status v1alpha1.AppPhase, podsLen *int32) []v1alpha1.PodInfo {
 	var pods []v1alpha1.PodInfo
-	podsLen := randRange(1, 4)
-	for range podsLen {
+	for range *podsLen {
 		pods = append(pods, getPod(image, status))
 	}
 	return pods
