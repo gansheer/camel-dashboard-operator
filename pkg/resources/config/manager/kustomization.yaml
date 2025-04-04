@@ -21,4 +21,3 @@ kind: Kustomization
 resources:
 - operator-deployment.yaml
 - operator-service-account.yaml
-- builder-service-account.yaml

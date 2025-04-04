@@ -15,10 +15,8 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-apiVersion: v1
-kind: ServiceAccount
+apiVersion: camel.apache.org/v1alpha1
+kind: App
 metadata:
-  creationTimestamp: null
-  labels:
-    app: camel-dashboard
-  name: camel-dashboard-builder
+  name: example
+spec: {}
