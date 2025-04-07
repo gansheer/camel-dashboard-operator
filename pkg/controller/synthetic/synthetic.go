@@ -30,9 +30,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	clientgocache "k8s.io/client-go/tools/cache"
-	"k8s.io/utils/ptr"
 	"knative.dev/serving/pkg/apis/serving"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	"sigs.k8s.io/controller-runtime/pkg/cache"
@@ -91,7 +89,7 @@ func onAdd(ctx context.Context, c client.Client, ctrlObj ctrl.Object) {
 			if err != nil {
 				log.Errorf(err, "Some error happened while creating a Camel application adapter for %s", appName)
 			}
-			if err = createSyntheticCamelApp(ctx, c, adapter.CamelApp()); err != nil {
+			if err = createSyntheticCamelApp(ctx, c, adapter.CamelApp(ctx, c)); err != nil {
 				log.Errorf(err, "Some error happened while creating a synthetic Camel Application %s", appName)
 			}
 			log.Infof("Created a synthetic Camel Application %s after %s resource object", app.GetName(), ctrlObj.GetName())
@@ -168,8 +166,14 @@ func deleteSyntheticCamelApp(ctx context.Context, c client.Client, namespace, na
 
 // nonManagedCamelApplicationAdapter represents a Camel application built and deployed outside the operator lifecycle.
 type nonManagedCamelApplicationAdapter interface {
-	// CamelApp return a CamelApp resource fed by the Camel application adapter.
-	CamelApp() *v1alpha1.App
+	// CamelApp returns a CamelApp resource fed by the Camel application adapter.
+	CamelApp(ctx context.Context, c client.Client) *v1alpha1.App
+	// GetAppPhase returns the phase of the backing Camel application.
+	GetAppPhase() v1alpha1.AppPhase
+	// GetAppImage returns the container image of the backing Camel application.
+	GetAppImage() string
+	// GetPods returns the actual Pods backing the Camel application.
+	GetPods(ctx context.Context, c client.Client) ([]v1alpha1.PodInfo, error)
 }
 
 func nonManagedCamelApplicationFactory(obj ctrl.Object) (nonManagedCamelApplicationAdapter, error) {
@@ -179,105 +183,11 @@ func nonManagedCamelApplicationFactory(obj ctrl.Object) (nonManagedCamelApplicat
 	}
 	cronjob, ok := obj.(*batchv1.CronJob)
 	if ok {
-		return &NonManagedCamelCronjob{cron: cronjob}, nil
+		return &nonManagedCamelCronjob{cron: cronjob}, nil
 	}
 	ksvc, ok := obj.(*servingv1.Service)
 	if ok {
-		return &NonManagedCamelKnativeService{ksvc: ksvc}, nil
+		return &nonManagedCamelKnativeService{ksvc: ksvc}, nil
 	}
 	return nil, fmt.Errorf("unsupported %s object kind", obj.GetName())
-}
-
-// NonManagedCamelDeployment represents a regular Camel application built and deployed outside the operator lifecycle.
-type nonManagedCamelDeployment struct {
-	deploy *appsv1.Deployment
-}
-
-// CamelApp return an CamelApp resource fed by the Camel application adapter.
-func (app *nonManagedCamelDeployment) CamelApp() *v1alpha1.App {
-	newApp := v1alpha1.NewApp(app.deploy.Namespace, app.deploy.Labels[v1alpha1.AppLabel])
-	newApp.SetAnnotations(map[string]string{
-		v1alpha1.AppImportedNameLabel: app.deploy.Name,
-		v1alpha1.AppImportedKindLabel: "Deployment",
-		v1alpha1.AppSyntheticLabel:    "true",
-	})
-	references := []metav1.OwnerReference{
-		{
-			APIVersion: "apps/v1",
-			Kind:       "Deployment",
-			Name:       app.deploy.Name,
-			UID:        app.deploy.UID,
-			Controller: &controller,
-		},
-	}
-	newApp.SetOwnerReferences(references)
-	// TODO: all the code above is (still) a simulation.
-	// We should expect this to be correctly handled by a proper reconciliation cycle instead
-	deployImage := app.deploy.Spec.Template.Spec.Containers[0].Image
-	appPhase := getAppPhase()
-	newApp.Status.Phase = appPhase
-	newApp.Status.Image = deployImage
-	newApp.Status.Pods = getPods(deployImage, appPhase, app.deploy.Spec.Replicas)
-	newApp.Status.Replicas = app.deploy.Spec.Replicas
-	if ptr.Deref(app.deploy.Spec.Replicas, 0) > 0 && newApp.Status.Pods[0].Runtime != nil {
-		newApp.Status.Info = fmt.Sprintf(
-			"Runtime Provider:%s, Runtime Version:%s, Camel Version: %s",
-			newApp.Status.Pods[0].Runtime.RuntimeProvider,
-			newApp.Status.Pods[0].Runtime.RuntimeVersion,
-			newApp.Status.Pods[0].Runtime.CamelVersion,
-		)
-	}
-	return &newApp
-}
-
-// NonManagedCamelCronjob represents a cron Camel application built and deployed outside the operator lifecycle.
-type NonManagedCamelCronjob struct {
-	cron *batchv1.CronJob
-}
-
-// CamelApp return an CamelApp resource fed by the Camel application adapter.
-func (app *NonManagedCamelCronjob) CamelApp() *v1alpha1.App {
-	newApp := v1alpha1.NewApp(app.cron.Namespace, app.cron.Labels[v1alpha1.AppLabel])
-	newApp.SetAnnotations(map[string]string{
-		v1alpha1.AppImportedNameLabel: app.cron.Name,
-		v1alpha1.AppImportedKindLabel: "CronJob",
-		v1alpha1.AppSyntheticLabel:    "true",
-	})
-	references := []metav1.OwnerReference{
-		{
-			APIVersion: "batch/v1",
-			Kind:       "CronJob",
-			Name:       app.cron.Name,
-			UID:        app.cron.UID,
-			Controller: &controller,
-		},
-	}
-	newApp.SetOwnerReferences(references)
-	return &newApp
-}
-
-// NonManagedCamelKnativeService represents a Knative Service based Camel application built and deployed outside the operator lifecycle.
-type NonManagedCamelKnativeService struct {
-	ksvc *servingv1.Service
-}
-
-// CamelApp return an CamelApp resource fed by the Camel application adapter.
-func (app *NonManagedCamelKnativeService) CamelApp() *v1alpha1.App {
-	newApp := v1alpha1.NewApp(app.ksvc.Namespace, app.ksvc.Labels[v1alpha1.AppLabel])
-	newApp.SetAnnotations(map[string]string{
-		v1alpha1.AppImportedNameLabel: app.ksvc.Name,
-		v1alpha1.AppImportedKindLabel: "KnativeService",
-		v1alpha1.AppSyntheticLabel:    "true",
-	})
-	references := []metav1.OwnerReference{
-		{
-			APIVersion: servingv1.SchemeGroupVersion.String(),
-			Kind:       "Service",
-			Name:       app.ksvc.Name,
-			UID:        app.ksvc.UID,
-			Controller: &controller,
-		},
-	}
-	newApp.SetOwnerReferences(references)
-	return &newApp
 }

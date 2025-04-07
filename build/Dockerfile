@@ -22,11 +22,3 @@ ARG IMAGE_ARCH
 USER 1001:0
 
 ADD build/_output/bin/camel-dashboard-${IMAGE_ARCH} /usr/local/bin/camel-dashboard
-
-FROM golang:1.22 AS go
-
-RUN go install github.com/go-delve/delve/cmd/dlv@latest
-
-FROM base AS debug
-
-COPY --from=go /go/bin/dlv /usr/local/bin/dlv

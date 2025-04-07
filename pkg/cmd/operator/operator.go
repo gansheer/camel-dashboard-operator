@@ -176,9 +176,7 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 	}
 
 	selectors := map[ctrl.Object]cache.ByObject{
-		&corev1.Pod{}:        selector,
 		&appsv1.Deployment{}: selector,
-		&batchv1.Job{}:       selector,
 	}
 
 	if ok, err := kubernetes.IsAPIResourceInstalled(bootstrapClient, servingv1.SchemeGroupVersion.String(), reflect.TypeOf(servingv1.Service{}).Name()); ok && err == nil {

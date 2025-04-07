@@ -18,6 +18,7 @@ limitations under the License.
 package synthetic
 
 import (
+	"context"
 	"testing"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -123,7 +124,7 @@ func TestNonManagedDeployment(t *testing.T) {
 	deploymentAdapter, err := nonManagedCamelApplicationFactory(deploy)
 	require.NoError(t, err)
 	assert.NotNil(t, deploymentAdapter)
-	assert.Equal(t, expectedIt.ObjectMeta, *&deploymentAdapter.CamelApp().ObjectMeta)
+	assert.Equal(t, expectedIt.ObjectMeta, *&deploymentAdapter.CamelApp(context.Background(), nil).ObjectMeta)
 }
 
 func TestNonManagedCronJob(t *testing.T) {
@@ -181,7 +182,7 @@ func TestNonManagedCronJob(t *testing.T) {
 	cronJobAdapter, err := nonManagedCamelApplicationFactory(cron)
 	require.NoError(t, err)
 	assert.NotNil(t, cronJobAdapter)
-	assert.Equal(t, expectedIt, *cronJobAdapter.CamelApp())
+	assert.Equal(t, expectedIt, *cronJobAdapter.CamelApp(context.Background(), nil))
 }
 
 func TestNonManagedKnativeService(t *testing.T) {
@@ -240,5 +241,5 @@ func TestNonManagedKnativeService(t *testing.T) {
 	knativeServiceAdapter, err := nonManagedCamelApplicationFactory(ksvc)
 	require.NoError(t, err)
 	assert.NotNil(t, knativeServiceAdapter)
-	assert.Equal(t, expectedIt, *knativeServiceAdapter.CamelApp())
+	assert.Equal(t, expectedIt, *knativeServiceAdapter.CamelApp(context.Background(), nil))
 }

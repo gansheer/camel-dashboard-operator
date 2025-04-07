@@ -80,6 +80,12 @@ type AppList struct {
 // AppPhase --.
 type AppPhase string
 
+// AppPhaseRunning --.
+const AppPhaseRunning AppPhase = "Running"
+
+// AppPhaseError --.
+const AppPhaseError AppPhase = "Error"
+
 // PodInfo contains a set of information related to the Pod running the Camel application.
 type PodInfo struct {
 	// the Pod name
