@@ -28,6 +28,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 
 	dto "github.com/prometheus/client_model/go"
@@ -57,8 +58,7 @@ func (app *nonManagedCamelDeployment) CamelApp(ctx context.Context, c client.Cli
 		},
 	}
 	newApp.SetOwnerReferences(references)
-	// TODO: all the code above is (still) a simulation.
-	// We should expect this to be correctly handled by a proper reconciliation cycle instead
+	// TODO: we should expect this to be correctly handled by a proper reconciliation cycle instead
 	deployImage := app.GetAppImage()
 	appPhase := app.GetAppPhase()
 	newApp.Status.Phase = appPhase
@@ -104,14 +104,34 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 			InternalIP: pod.Status.PodIP,
 		}
 
-		fmt.Println("***** Attempt to get info from Pod", podInfo.Name)
 		resp, err := http.Get(fmt.Sprintf("http://%s:8080/observe/metrics", pod.Status.PodIP))
 		if err != nil {
-			fmt.Println("*****", err)
 			return nil, err
 		}
+		defer resp.Body.Close()
 		if resp.StatusCode == http.StatusOK {
-			parseMF(resp.Body)
+			podInfo.ObservabilityService = v1alpha1.ObservabilityServiceInfo{
+				MetricsEndpoint: "observe/metrics",
+			}
+			metrics, err := parseMetrics(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			if metric, ok := metrics["app_info"]; ok {
+				populateRuntimeInfo(metric, &podInfo)
+			}
+			if metric, ok := metrics["camel_exchanges_total"]; ok {
+				populateRuntimeExchangeTotal(metric, &podInfo)
+			}
+			if metric, ok := metrics["camel_exchanges_failed_total"]; ok {
+				populateRuntimeExchangeFailedTotal(metric, &podInfo)
+			}
+			if metric, ok := metrics["camel_exchanges_succeeded_total"]; ok {
+				populateRuntimeExchangeSucceededTotal(metric, &podInfo)
+			}
+			if metric, ok := metrics["camel_exchanges_inflight"]; ok {
+				populateRuntimeExchangeInflight(metric, &podInfo)
+			}
 		}
 
 		podsInfo = append(podsInfo, podInfo)
@@ -120,14 +140,46 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 	return podsInfo, nil
 }
 
-func parseMF(reader io.Reader) (map[string]*dto.MetricFamily, error) {
+func parseMetrics(reader io.Reader) (map[string]*dto.MetricFamily, error) {
 	var parser expfmt.TextParser
 	mf, err := parser.TextToMetricFamilies(reader)
 	if err != nil {
-		fmt.Println("*****", err)
 		return nil, err
 	}
-	fmt.Println("*****", mf)
 
 	return mf, nil
+}
+
+func populateRuntimeInfo(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
+	podInfo.Runtime = &v1alpha1.RuntimeInfo{
+		Exchange: &v1alpha1.ExchangeInfo{},
+	}
+	for _, label := range metric.GetMetric()[0].GetLabel() {
+		switch ptr.Deref(label.Name, "") {
+		case "camel_runtime_provider":
+			podInfo.Runtime.RuntimeProvider = ptr.Deref(label.Value, "")
+		case "camel_runtime_version":
+			podInfo.Runtime.RuntimeVersion = ptr.Deref(label.Value, "")
+		case "camel_version":
+			podInfo.Runtime.CamelVersion = ptr.Deref(label.Value, "")
+		case "camel_context":
+			podInfo.Runtime.ContextName = ptr.Deref(label.Value, "")
+		}
+	}
+}
+
+func populateRuntimeExchangeTotal(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
+	podInfo.Runtime.Exchange.Total = int(ptr.Deref(metric.GetMetric()[0].GetCounter().Value, 0))
+}
+
+func populateRuntimeExchangeFailedTotal(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
+	podInfo.Runtime.Exchange.Failed = int(ptr.Deref(metric.GetMetric()[0].GetCounter().Value, 0))
+}
+
+func populateRuntimeExchangeSucceededTotal(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
+	podInfo.Runtime.Exchange.Succeeded = int(ptr.Deref(metric.GetMetric()[0].GetCounter().Value, 0))
+}
+
+func populateRuntimeExchangeInflight(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
+	podInfo.Runtime.Exchange.Pending = int(ptr.Deref(metric.GetMetric()[0].GetGauge().Value, 0))
 }

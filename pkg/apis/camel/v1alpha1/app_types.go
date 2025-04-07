@@ -111,7 +111,7 @@ type RuntimeInfo struct {
 	// the Camel core version
 	CamelVersion string `json:"camelVersion,omitempty"`
 	// Information about the exchange
-	Exchange ExchangeInfo `json:"exchange,omitempty"`
+	Exchange *ExchangeInfo `json:"exchange,omitempty"`
 }
 
 // ObservabilityServiceInfo contains the endpoints that can be possibly used to scrape more information.
@@ -127,7 +127,7 @@ type ExchangeInfo struct {
 	// The total number of exchanges
 	Total int `json:"total,omitempty"`
 	// The total number of exchanges succeeded
-	Succeed int `json:"succeed,omitempty"`
+	Succeeded int `json:"succeed,omitempty"`
 	// The total number of exchanges failed
 	Failed int `json:"failed,omitempty"`
 	// The total number of exchanges pending (in Camel jargon, inflight exchanges)
