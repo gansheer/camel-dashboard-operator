@@ -19,6 +19,9 @@ package synthetic
 
 import (
 	"context"
+	"fmt"
+	"io"
+	"net/http"
 
 	v1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
@@ -26,6 +29,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
+
+	dto "github.com/prometheus/client_model/go"
+	"github.com/prometheus/common/expfmt"
 )
 
 // nonManagedCamelDeployment represents a regular Camel application built and deployed outside the operator lifecycle.
@@ -98,9 +104,30 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 			InternalIP: pod.Status.PodIP,
 		}
 
-		// TODO: scan metrics here
+		fmt.Println("***** Attempt to get info from Pod", podInfo.Name)
+		resp, err := http.Get(fmt.Sprintf("http://%s:8080/observe/metrics", pod.Status.PodIP))
+		if err != nil {
+			fmt.Println("*****", err)
+			return nil, err
+		}
+		if resp.StatusCode == http.StatusOK {
+			parseMF(resp.Body)
+		}
+
 		podsInfo = append(podsInfo, podInfo)
 	}
 
 	return podsInfo, nil
+}
+
+func parseMF(reader io.Reader) (map[string]*dto.MetricFamily, error) {
+	var parser expfmt.TextParser
+	mf, err := parser.TextToMetricFamilies(reader)
+	if err != nil {
+		fmt.Println("*****", err)
+		return nil, err
+	}
+	fmt.Println("*****", mf)
+
+	return mf, nil
 }
