@@ -22,10 +22,10 @@ package v1alpha1
 // ExchangeInfoApplyConfiguration represents a declarative configuration of the ExchangeInfo type for use
 // with apply.
 type ExchangeInfoApplyConfiguration struct {
-	Total   *int `json:"total,omitempty"`
-	Succeed *int `json:"succeed,omitempty"`
-	Failed  *int `json:"failed,omitempty"`
-	Pending *int `json:"pending,omitempty"`
+	Total     *int `json:"total,omitempty"`
+	Succeeded *int `json:"succeed,omitempty"`
+	Failed    *int `json:"failed,omitempty"`
+	Pending   *int `json:"pending,omitempty"`
 }
 
 // ExchangeInfoApplyConfiguration constructs a declarative configuration of the ExchangeInfo type for use with
@@ -42,11 +42,11 @@ func (b *ExchangeInfoApplyConfiguration) WithTotal(value int) *ExchangeInfoApply
 	return b
 }
 
-// WithSucceed sets the Succeed field in the declarative configuration to the given value
+// WithSucceeded sets the Succeeded field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Succeed field is set to the value of the last call.
-func (b *ExchangeInfoApplyConfiguration) WithSucceed(value int) *ExchangeInfoApplyConfiguration {
-	b.Succeed = &value
+// If called multiple times, the Succeeded field is set to the value of the last call.
+func (b *ExchangeInfoApplyConfiguration) WithSucceeded(value int) *ExchangeInfoApplyConfiguration {
+	b.Succeeded = &value
 	return b
 }
 

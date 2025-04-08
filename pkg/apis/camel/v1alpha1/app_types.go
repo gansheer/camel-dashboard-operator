@@ -95,15 +95,15 @@ type PodInfo struct {
 	// the Pod status
 	Status string `json:"status,omitempty"`
 	// Observability services information
-	ObservabilityService ObservabilityServiceInfo `json:"observe,omitempty"`
+	ObservabilityService *ObservabilityServiceInfo `json:"observe,omitempty"`
 	// Some information about the Camel runtime
 	Runtime *RuntimeInfo `json:"runtime,omitempty"`
 }
 
 // RuntimeInfo contains a set of information related to the Camel application runtime.
 type RuntimeInfo struct {
-	// the name of Camel context
-	ContextName string `json:"contextName,omitempty"`
+	// the status as reported by health endpoint
+	Status string `json:"status,omitempty"`
 	// the runtime provider
 	RuntimeProvider string `json:"runtimeProvider,omitempty"`
 	// the runtime version
@@ -118,8 +118,12 @@ type RuntimeInfo struct {
 type ObservabilityServiceInfo struct {
 	// the health endpoint
 	HealthEndpoint string `json:"healthEndpoint,omitempty"`
+	// the health port
+	HealthPort int `json:"healthPort,omitempty"`
 	// the metrics endpoint
 	MetricsEndpoint string `json:"metricsEndpoint,omitempty"`
+	// the metrics port
+	MetricsPort int `json:"metricsPort,omitempty"`
 }
 
 // ExchangeInfo contains the endpoints that can be possibly used to scrape more information.

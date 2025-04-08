@@ -98,46 +98,56 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 		return nil, err
 	}
 	for _, pod := range pods.Items {
+		podIp := pod.Status.PodIP
 		podInfo := v1alpha1.PodInfo{
 			Name:       pod.GetName(),
 			Status:     string(pod.Status.Phase),
-			InternalIP: pod.Status.PodIP,
+			InternalIP: podIp,
 		}
-
-		resp, err := http.Get(fmt.Sprintf("http://%s:8080/observe/metrics", pod.Status.PodIP))
-		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
-			podInfo.ObservabilityService = v1alpha1.ObservabilityServiceInfo{
-				MetricsEndpoint: "observe/metrics",
-			}
-			metrics, err := parseMetrics(resp.Body)
-			if err != nil {
-				return nil, err
-			}
-			if metric, ok := metrics["app_info"]; ok {
-				populateRuntimeInfo(metric, &podInfo)
-			}
-			if metric, ok := metrics["camel_exchanges_total"]; ok {
-				populateRuntimeExchangeTotal(metric, &podInfo)
-			}
-			if metric, ok := metrics["camel_exchanges_failed_total"]; ok {
-				populateRuntimeExchangeFailedTotal(metric, &podInfo)
-			}
-			if metric, ok := metrics["camel_exchanges_succeeded_total"]; ok {
-				populateRuntimeExchangeSucceededTotal(metric, &podInfo)
-			}
-			if metric, ok := metrics["camel_exchanges_inflight"]; ok {
-				populateRuntimeExchangeInflight(metric, &podInfo)
-			}
-		}
+		setMetrics(&podInfo, podIp)
+		setHealth(&podInfo, podIp)
 
 		podsInfo = append(podsInfo, podInfo)
 	}
 
 	return podsInfo, nil
+}
+
+func setMetrics(podInfo *v1alpha1.PodInfo, podIp string) error {
+	resp, err := http.Get(fmt.Sprintf("http://%s:%d/%s", podIp, observabilityPortDefault, observabilityMetricsDefault))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusOK {
+		if podInfo.ObservabilityService == nil {
+			podInfo.ObservabilityService = &v1alpha1.ObservabilityServiceInfo{}
+		}
+		podInfo.ObservabilityService.MetricsEndpoint = observabilityMetricsDefault
+		podInfo.ObservabilityService.MetricsPort = observabilityPortDefault
+
+		metrics, err := parseMetrics(resp.Body)
+		if err != nil {
+			return err
+		}
+		if metric, ok := metrics["app_info"]; ok {
+			populateRuntimeInfo(metric, podInfo)
+		}
+		if metric, ok := metrics["camel_exchanges_total"]; ok {
+			populateRuntimeExchangeTotal(metric, podInfo)
+		}
+		if metric, ok := metrics["camel_exchanges_failed_total"]; ok {
+			populateRuntimeExchangeFailedTotal(metric, podInfo)
+		}
+		if metric, ok := metrics["camel_exchanges_succeeded_total"]; ok {
+			populateRuntimeExchangeSucceededTotal(metric, podInfo)
+		}
+		if metric, ok := metrics["camel_exchanges_inflight"]; ok {
+			populateRuntimeExchangeInflight(metric, podInfo)
+		}
+	}
+
+	return nil
 }
 
 func parseMetrics(reader io.Reader) (map[string]*dto.MetricFamily, error) {
@@ -151,8 +161,11 @@ func parseMetrics(reader io.Reader) (map[string]*dto.MetricFamily, error) {
 }
 
 func populateRuntimeInfo(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
-	podInfo.Runtime = &v1alpha1.RuntimeInfo{
-		Exchange: &v1alpha1.ExchangeInfo{},
+	if podInfo.Runtime == nil {
+		podInfo.Runtime = &v1alpha1.RuntimeInfo{}
+	}
+	if podInfo.Runtime.Exchange == nil {
+		podInfo.Runtime.Exchange = &v1alpha1.ExchangeInfo{}
 	}
 	for _, label := range metric.GetMetric()[0].GetLabel() {
 		switch ptr.Deref(label.Name, "") {
@@ -162,8 +175,6 @@ func populateRuntimeInfo(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
 			podInfo.Runtime.RuntimeVersion = ptr.Deref(label.Value, "")
 		case "camel_version":
 			podInfo.Runtime.CamelVersion = ptr.Deref(label.Value, "")
-		case "camel_context":
-			podInfo.Runtime.ContextName = ptr.Deref(label.Value, "")
 		}
 	}
 }
@@ -182,4 +193,35 @@ func populateRuntimeExchangeSucceededTotal(metric *dto.MetricFamily, podInfo *v1
 
 func populateRuntimeExchangeInflight(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
 	podInfo.Runtime.Exchange.Pending = int(ptr.Deref(metric.GetMetric()[0].GetGauge().Value, 0))
+}
+
+func setHealth(podInfo *v1alpha1.PodInfo, podIp string) error {
+	resp, err := http.Get(fmt.Sprintf("http://%s:%d/%s", podIp, observabilityPortDefault, observabilityHealthDefault))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusOK {
+		if podInfo.ObservabilityService == nil {
+			podInfo.ObservabilityService = &v1alpha1.ObservabilityServiceInfo{}
+		}
+		podInfo.ObservabilityService.HealthPort = observabilityPortDefault
+		podInfo.ObservabilityService.HealthEndpoint = observabilityHealthDefault
+
+		status, err := parseHealthStatus(resp.Body)
+		if err != nil {
+			return err
+		}
+		if podInfo.Runtime == nil {
+			podInfo.Runtime = &v1alpha1.RuntimeInfo{}
+		}
+		podInfo.Runtime.Status = status
+	}
+
+	return nil
+}
+
+func parseHealthStatus(reader io.Reader) (string, error) {
+	// TODO: parsing logic here!
+	return "up", nil
 }

@@ -107,18 +107,21 @@ spec:
                         healthEndpoint:
                           description: the health endpoint
                           type: string
+                        healthPort:
+                          description: the health port
+                          type: integer
                         metricsEndpoint:
                           description: the metrics endpoint
                           type: string
+                        metricsPort:
+                          description: the metrics port
+                          type: integer
                       type: object
                     runtime:
                       description: Some information about the Camel runtime
                       properties:
                         camelVersion:
                           description: the Camel core version
-                          type: string
-                        contextName:
-                          description: the name of Camel context
                           type: string
                         exchange:
                           description: Information about the exchange
@@ -142,6 +145,9 @@ spec:
                           type: string
                         runtimeVersion:
                           description: the runtime version
+                          type: string
+                        status:
+                          description: the status as reported by health endpoint
                           type: string
                       type: object
                     status:

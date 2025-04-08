@@ -23,7 +23,9 @@ package v1alpha1
 // with apply.
 type ObservabilityServiceInfoApplyConfiguration struct {
 	HealthEndpoint  *string `json:"healthEndpoint,omitempty"`
+	HealthPort      *int    `json:"healthPort,omitempty"`
 	MetricsEndpoint *string `json:"metricsEndpoint,omitempty"`
+	MetricsPort     *int    `json:"metricsPort,omitempty"`
 }
 
 // ObservabilityServiceInfoApplyConfiguration constructs a declarative configuration of the ObservabilityServiceInfo type for use with
@@ -40,10 +42,26 @@ func (b *ObservabilityServiceInfoApplyConfiguration) WithHealthEndpoint(value st
 	return b
 }
 
+// WithHealthPort sets the HealthPort field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the HealthPort field is set to the value of the last call.
+func (b *ObservabilityServiceInfoApplyConfiguration) WithHealthPort(value int) *ObservabilityServiceInfoApplyConfiguration {
+	b.HealthPort = &value
+	return b
+}
+
 // WithMetricsEndpoint sets the MetricsEndpoint field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the MetricsEndpoint field is set to the value of the last call.
 func (b *ObservabilityServiceInfoApplyConfiguration) WithMetricsEndpoint(value string) *ObservabilityServiceInfoApplyConfiguration {
 	b.MetricsEndpoint = &value
+	return b
+}
+
+// WithMetricsPort sets the MetricsPort field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the MetricsPort field is set to the value of the last call.
+func (b *ObservabilityServiceInfoApplyConfiguration) WithMetricsPort(value int) *ObservabilityServiceInfoApplyConfiguration {
+	b.MetricsPort = &value
 	return b
 }

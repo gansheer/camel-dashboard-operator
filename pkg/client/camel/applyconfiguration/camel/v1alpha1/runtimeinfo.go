@@ -22,7 +22,7 @@ package v1alpha1
 // RuntimeInfoApplyConfiguration represents a declarative configuration of the RuntimeInfo type for use
 // with apply.
 type RuntimeInfoApplyConfiguration struct {
-	ContextName     *string                         `json:"contextName,omitempty"`
+	Status          *string                         `json:"status,omitempty"`
 	RuntimeProvider *string                         `json:"runtimeProvider,omitempty"`
 	RuntimeVersion  *string                         `json:"runtimeVersion,omitempty"`
 	CamelVersion    *string                         `json:"camelVersion,omitempty"`
@@ -35,11 +35,11 @@ func RuntimeInfo() *RuntimeInfoApplyConfiguration {
 	return &RuntimeInfoApplyConfiguration{}
 }
 
-// WithContextName sets the ContextName field in the declarative configuration to the given value
+// WithStatus sets the Status field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the ContextName field is set to the value of the last call.
-func (b *RuntimeInfoApplyConfiguration) WithContextName(value string) *RuntimeInfoApplyConfiguration {
-	b.ContextName = &value
+// If called multiple times, the Status field is set to the value of the last call.
+func (b *RuntimeInfoApplyConfiguration) WithStatus(value string) *RuntimeInfoApplyConfiguration {
+	b.Status = &value
 	return b
 }
 
