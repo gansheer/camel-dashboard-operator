@@ -24,6 +24,7 @@ import (
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
 	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 )
 
 // nonManagedCamelCronjob represents a cron Camel application built and deployed outside the operator lifecycle.
@@ -55,6 +56,11 @@ func (app *nonManagedCamelCronjob) CamelApp(ctx context.Context, c client.Client
 // GetAppPhase returns the phase of the backing Camel application.
 func (app *nonManagedCamelCronjob) GetAppPhase() v1alpha1.AppPhase {
 	return v1alpha1.AppPhase("TBD")
+}
+
+// GetReplicas returns the number of desired replicas for the backing Camel application.
+func (app *nonManagedCamelCronjob) GetReplicas() *int32 {
+	return ptr.To(int32(-1))
 }
 
 // GetAppImage returns the container image of the backing Camel application.

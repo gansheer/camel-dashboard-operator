@@ -25,7 +25,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/pkg/ptr"
+	"k8s.io/utils/ptr"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 
 	v1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
@@ -65,7 +65,7 @@ func TestNonManagedUnsupported(t *testing.T) {
 		},
 	}
 
-	nilAdapter, err := nonManagedCamelApplicationFactory(pod)
+	nilAdapter, err := NonManagedCamelApplicationFactory(pod)
 	require.Error(t, err)
 	assert.Equal(t, "unsupported my-pod object kind", err.Error())
 	assert.Nil(t, nilAdapter)
@@ -85,7 +85,7 @@ func TestNonManagedDeployment(t *testing.T) {
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: ptr.Int32(1),
+			Replicas: ptr.To(int32(1)),
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
@@ -121,7 +121,7 @@ func TestNonManagedDeployment(t *testing.T) {
 	}
 	expectedIt.SetOwnerReferences(references)
 
-	deploymentAdapter, err := nonManagedCamelApplicationFactory(deploy)
+	deploymentAdapter, err := NonManagedCamelApplicationFactory(deploy)
 	require.NoError(t, err)
 	assert.NotNil(t, deploymentAdapter)
 	assert.Equal(t, expectedIt.ObjectMeta, *&deploymentAdapter.CamelApp(context.Background(), nil).ObjectMeta)
@@ -179,7 +179,7 @@ func TestNonManagedCronJob(t *testing.T) {
 		},
 	}
 	expectedIt.SetOwnerReferences(references)
-	cronJobAdapter, err := nonManagedCamelApplicationFactory(cron)
+	cronJobAdapter, err := NonManagedCamelApplicationFactory(cron)
 	require.NoError(t, err)
 	assert.NotNil(t, cronJobAdapter)
 	assert.Equal(t, expectedIt, *cronJobAdapter.CamelApp(context.Background(), nil))
@@ -238,7 +238,7 @@ func TestNonManagedKnativeService(t *testing.T) {
 	}
 	expectedIt.SetOwnerReferences(references)
 
-	knativeServiceAdapter, err := nonManagedCamelApplicationFactory(ksvc)
+	knativeServiceAdapter, err := NonManagedCamelApplicationFactory(ksvc)
 	require.NoError(t, err)
 	assert.NotNil(t, knativeServiceAdapter)
 	assert.Equal(t, expectedIt, *knativeServiceAdapter.CamelApp(context.Background(), nil))

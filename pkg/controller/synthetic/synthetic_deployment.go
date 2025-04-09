@@ -60,17 +60,7 @@ func (app *nonManagedCamelDeployment) CamelApp(ctx context.Context, c client.Cli
 		},
 	}
 	newApp.SetOwnerReferences(references)
-	// TODO: we should expect this to be correctly handled by a proper reconciliation cycle instead
-	deployImage := app.GetAppImage()
-	appPhase := app.GetAppPhase()
-	newApp.Status.Phase = appPhase
-	newApp.Status.Image = deployImage
-	pods, err := app.GetPods(ctx, c)
-	if err != nil {
-		fmt.Printf("**** Error %v\n", err)
-	}
-	newApp.Status.Pods = pods
-	newApp.Status.Replicas = app.deploy.Spec.Replicas
+
 	return &newApp
 }
 
@@ -86,6 +76,11 @@ func (app *nonManagedCamelDeployment) GetAppPhase() v1alpha1.AppPhase {
 // GetAppImage returns the container image of the backing Camel application.
 func (app *nonManagedCamelDeployment) GetAppImage() string {
 	return app.deploy.Spec.Template.Spec.Containers[0].Image
+}
+
+// GetReplicas returns the number of desired replicas for the backing Camel application.
+func (app *nonManagedCamelDeployment) GetReplicas() *int32 {
+	return app.deploy.Spec.Replicas
 }
 
 // GetPods returns the pods backing the Camel application.

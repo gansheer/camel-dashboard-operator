@@ -19,17 +19,25 @@ package app
 
 import (
 	"context"
+	"time"
 
 	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
+	"github.com/squakez/camel-dashboard-operator/pkg/event"
+	"github.com/squakez/camel-dashboard-operator/pkg/util/log"
 	"github.com/squakez/camel-dashboard-operator/pkg/util/monitoring"
+	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
-	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	batchv1 "k8s.io/api/batch/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
+	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func Add(ctx context.Context, mgr manager.Manager, c client.Client) error {
@@ -55,25 +63,85 @@ func newReconciler(mgr manager.Manager, c client.Client) reconcile.Reconciler {
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return builder.ControllerManagedBy(mgr).
 		Named("app-controller").
-		// Watch for changes to primary resource Build
 		For(&v1alpha1.App{}).
+		Owns(&batchv1.CronJob{}, builder.WithPredicates(StatusChangedPredicate{})).
+		Owns(&servingv1.Service{}, builder.WithPredicates(StatusChangedPredicate{})).
+		Owns(&appsv1.Deployment{}, builder.WithPredicates(StatusChangedPredicate{})).
 		Complete(r)
 }
 
-var _ reconcile.Reconciler = &reconcileApp{}
-
-// reconcileApp reconciles a Build object.
+// reconcileApp reconciles an App object.
 type reconcileApp struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the API server
-	client client.Client
-	// Non-caching client to be used whenever caching may cause race conditions,
-	// like in the builds scheduling critical section
+	client   client.Client
 	reader   ctrl.Reader
 	scheme   *runtime.Scheme
 	recorder record.EventRecorder
 }
 
 func (r *reconcileApp) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
-	return reconcile.Result{}, nil
+	rlog := Log.WithValues("request-namespace", request.Namespace, "request-name", request.Name)
+	var instance v1alpha1.App
+	if err := r.client.Get(ctx, request.NamespacedName, &instance); err != nil {
+		if k8serrors.IsNotFound(err) {
+			return reconcile.Result{}, nil
+		}
+		// Error reading the object - requeue the request.
+		return reconcile.Result{}, err
+	}
+
+	actions := []Action{
+		NewMonitorAction(),
+	}
+	var err error
+
+	target := instance.DeepCopy()
+	targetLog := rlog.ForApp(target)
+
+	for _, a := range actions {
+		a.InjectClient(r.client)
+		a.InjectLogger(targetLog)
+
+		if !a.CanHandle(target) {
+			continue
+		}
+		targetLog.Debugf("Invoking action %s", a.Name())
+
+		target, err = a.Handle(ctx, target)
+		if err != nil {
+			event.NotifyAppError(ctx, r.client, r.recorder, &instance, target, err)
+			if target != nil {
+				_ = r.update(ctx, &instance, target, &targetLog)
+			}
+			return reconcile.Result{RequeueAfter: time.Minute}, err
+		}
+
+		if target != nil {
+			if err := r.update(ctx, &instance, target, &targetLog); err != nil {
+				event.NotifyAppError(ctx, r.client, r.recorder, &instance, target, err)
+				return reconcile.Result{RequeueAfter: time.Minute}, err
+			}
+		}
+		event.NotifyAppUpdated(ctx, r.client, r.recorder, &instance, target)
+	}
+
+	return reconcile.Result{RequeueAfter: time.Minute}, nil
+}
+
+func (r *reconcileApp) update(ctx context.Context, base *v1alpha1.App, target *v1alpha1.App, log *log.Logger) error {
+	if err := r.client.Status().Patch(ctx, target, ctrl.MergeFrom(base)); err != nil {
+		event.NotifyAppError(ctx, r.client, r.recorder, base, target, err)
+		return err
+	}
+
+	if target.Status.Phase != base.Status.Phase {
+		log.Info(
+			"State transition",
+			"phase-from", base.Status.Phase,
+			"phase-to", target.Status.Phase,
+		)
+	}
+
+	return nil
 }

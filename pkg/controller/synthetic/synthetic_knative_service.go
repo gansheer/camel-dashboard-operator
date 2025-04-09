@@ -23,6 +23,7 @@ import (
 	v1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 )
 
@@ -55,6 +56,11 @@ func (app *nonManagedCamelKnativeService) CamelApp(ctx context.Context, c client
 // GetAppPhase returns the phase of the backing Camel application.
 func (app *nonManagedCamelKnativeService) GetAppPhase() v1alpha1.AppPhase {
 	return v1alpha1.AppPhase("TBD")
+}
+
+// GetReplicas returns the number of desired replicas for the backing Camel application.
+func (app *nonManagedCamelKnativeService) GetReplicas() *int32 {
+	return ptr.To(int32(-1))
 }
 
 // GetAppImage returns the container image of the backing Camel application.

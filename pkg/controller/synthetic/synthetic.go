@@ -91,7 +91,7 @@ func onAdd(ctx context.Context, c client.Client, ctrlObj ctrl.Object) {
 	app, err := getSyntheticCamelApp(ctx, c, ctrlObj.GetNamespace(), appName)
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
-			adapter, err := nonManagedCamelApplicationFactory(ctrlObj)
+			adapter, err := NonManagedCamelApplicationFactory(ctrlObj)
 			if err != nil {
 				log.Errorf(err, "Some error happened while creating a Camel application adapter for %s", appName)
 			}
@@ -170,19 +170,21 @@ func deleteSyntheticCamelApp(ctx context.Context, c client.Client, namespace, na
 	return c.Delete(ctx, &app)
 }
 
-// nonManagedCamelApplicationAdapter represents a Camel application built and deployed outside the operator lifecycle.
-type nonManagedCamelApplicationAdapter interface {
+// NonManagedCamelApplicationAdapter represents a Camel application built and deployed outside the operator lifecycle.
+type NonManagedCamelApplicationAdapter interface {
 	// CamelApp returns a CamelApp resource fed by the Camel application adapter.
 	CamelApp(ctx context.Context, c client.Client) *v1alpha1.App
 	// GetAppPhase returns the phase of the backing Camel application.
 	GetAppPhase() v1alpha1.AppPhase
 	// GetAppImage returns the container image of the backing Camel application.
 	GetAppImage() string
+	// GetReplicas returns the number of desired replicas for the backing Camel application.
+	GetReplicas() *int32
 	// GetPods returns the actual Pods backing the Camel application.
 	GetPods(ctx context.Context, c client.Client) ([]v1alpha1.PodInfo, error)
 }
 
-func nonManagedCamelApplicationFactory(obj ctrl.Object) (nonManagedCamelApplicationAdapter, error) {
+func NonManagedCamelApplicationFactory(obj ctrl.Object) (NonManagedCamelApplicationAdapter, error) {
 	deploy, ok := obj.(*appsv1.Deployment)
 	if ok {
 		return &nonManagedCamelDeployment{deploy: deploy}, nil
