@@ -19,6 +19,8 @@ package synthetic
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -65,7 +67,7 @@ func (app *nonManagedCamelDeployment) CamelApp(ctx context.Context, c client.Cli
 	newApp.Status.Image = deployImage
 	pods, err := app.GetPods(ctx, c)
 	if err != nil {
-		return nil
+		fmt.Printf("**** Error %v\n", err)
 	}
 	newApp.Status.Pods = pods
 	newApp.Status.Replicas = app.deploy.Spec.Replicas
@@ -104,8 +106,12 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 			Status:     string(pod.Status.Phase),
 			InternalIP: podIp,
 		}
-		setMetrics(&podInfo, podIp)
-		setHealth(&podInfo, podIp)
+		if err := setMetrics(&podInfo, podIp); err != nil {
+			return nil, err
+		}
+		if err := setHealth(&podInfo, podIp); err != nil {
+			return nil, err
+		}
 
 		podsInfo = append(podsInfo, podInfo)
 	}
@@ -222,6 +228,15 @@ func setHealth(podInfo *v1alpha1.PodInfo, podIp string) error {
 }
 
 func parseHealthStatus(reader io.Reader) (string, error) {
-	// TODO: parsing logic here!
-	return "up", nil
+	var healthContent map[string]any
+	err := json.NewDecoder(reader).Decode(&healthContent)
+	if err != nil {
+		return "", err
+	}
+	status, ok := healthContent["status"].(string)
+	if !ok {
+		return "", errors.New("health endpoint syntax error: missing .status property")
+	}
+
+	return string(status), nil
 }
