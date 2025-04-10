@@ -45,12 +45,11 @@ func (action *monitorAction) Name() string {
 }
 
 func (action *monitorAction) CanHandle(app *v1alpha1.App) bool {
-	// It always apply, regardless the phase
 	return true
 }
 
 func (action *monitorAction) Handle(ctx context.Context, app *v1alpha1.App) (*v1alpha1.App, error) {
-	action.L.Infof("Monitoring App %s/%s", app.Namespace, app.Name)
+	action.L.Infof("Monitoring App %s/%s with status %s", app.Namespace, app.Name, app.Status.Phase)
 	objOwner, err := lookupObject(ctx, action.client,
 		app.Annotations[v1alpha1.AppImportedKindLabel], app.Namespace, app.Annotations[v1alpha1.AppImportedNameLabel])
 	if err != nil {

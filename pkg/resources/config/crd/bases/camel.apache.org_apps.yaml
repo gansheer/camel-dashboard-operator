@@ -117,6 +117,9 @@ spec:
                           description: the metrics port
                           type: integer
                       type: object
+                    ready:
+                      description: the Pod readiness
+                      type: boolean
                     runtime:
                       description: Some information about the Camel runtime
                       properties:

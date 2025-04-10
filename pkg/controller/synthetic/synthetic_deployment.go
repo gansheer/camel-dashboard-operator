@@ -27,6 +27,7 @@ import (
 
 	v1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
+	"github.com/squakez/camel-dashboard-operator/pkg/util/kubernetes"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -101,11 +102,18 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 			Status:     string(pod.Status.Phase),
 			InternalIP: podIp,
 		}
-		if err := setMetrics(&podInfo, podIp); err != nil {
-			return nil, err
-		}
-		if err := setHealth(&podInfo, podIp); err != nil {
-			return nil, err
+
+		// Check the services only if the Pod is ready
+		if ready := kubernetes.GetPodCondition(pod, corev1.PodReady); ready != nil && ready.Status == corev1.ConditionTrue {
+			ready := true
+			podInfo.ObservabilityService = &v1alpha1.ObservabilityServiceInfo{}
+			if err := setHealth(&podInfo, podIp); err != nil {
+				ready = false
+			}
+			if err := setMetrics(&podInfo, podIp); err != nil {
+				ready = false
+			}
+			podInfo.Ready = ready
 		}
 
 		podsInfo = append(podsInfo, podInfo)
@@ -115,15 +123,18 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 }
 
 func setMetrics(podInfo *v1alpha1.PodInfo, podIp string) error {
+	// TODO, use instead
+	// c.CoreV1().
+	// 	Pods(pod.Namespace).
+	// 	ProxyGet(strings.ToLower(string(p.HTTPGet.Scheme)), pod.Name, strconv.Itoa(port), p.HTTPGet.Path, params).
+	// 	DoRaw(probeCtx)
+	// also for health ping
 	resp, err := http.Get(fmt.Sprintf("http://%s:%d/%s", podIp, observabilityPortDefault, observabilityMetricsDefault))
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
-		if podInfo.ObservabilityService == nil {
-			podInfo.ObservabilityService = &v1alpha1.ObservabilityServiceInfo{}
-		}
 		podInfo.ObservabilityService.MetricsEndpoint = observabilityMetricsDefault
 		podInfo.ObservabilityService.MetricsPort = observabilityPortDefault
 
@@ -203,9 +214,6 @@ func setHealth(podInfo *v1alpha1.PodInfo, podIp string) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
-		if podInfo.ObservabilityService == nil {
-			podInfo.ObservabilityService = &v1alpha1.ObservabilityServiceInfo{}
-		}
 		podInfo.ObservabilityService.HealthPort = observabilityPortDefault
 		podInfo.ObservabilityService.HealthEndpoint = observabilityHealthDefault
 

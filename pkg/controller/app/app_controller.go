@@ -26,7 +26,6 @@ import (
 	"github.com/squakez/camel-dashboard-operator/pkg/event"
 	"github.com/squakez/camel-dashboard-operator/pkg/util/log"
 	"github.com/squakez/camel-dashboard-operator/pkg/util/monitoring"
-	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/record"
@@ -34,9 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	batchv1 "k8s.io/api/batch/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -63,10 +60,7 @@ func newReconciler(mgr manager.Manager, c client.Client) reconcile.Reconciler {
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return builder.ControllerManagedBy(mgr).
 		Named("app-controller").
-		For(&v1alpha1.App{}).
-		Owns(&batchv1.CronJob{}, builder.WithPredicates(StatusChangedPredicate{})).
-		Owns(&servingv1.Service{}, builder.WithPredicates(StatusChangedPredicate{})).
-		Owns(&appsv1.Deployment{}, builder.WithPredicates(StatusChangedPredicate{})).
+		For(&v1alpha1.App{}, builder.WithPredicates(UpdateFalsePredicate{})).
 		Complete(r)
 }
 
@@ -87,7 +81,6 @@ func (r *reconcileApp) Reconcile(ctx context.Context, request reconcile.Request)
 		if k8serrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request.
 		return reconcile.Result{}, err
 	}
 
@@ -114,19 +107,19 @@ func (r *reconcileApp) Reconcile(ctx context.Context, request reconcile.Request)
 			if target != nil {
 				_ = r.update(ctx, &instance, target, &targetLog)
 			}
-			return reconcile.Result{RequeueAfter: time.Minute}, err
+			return reconcile.Result{}, err
 		}
 
 		if target != nil {
 			if err := r.update(ctx, &instance, target, &targetLog); err != nil {
 				event.NotifyAppError(ctx, r.client, r.recorder, &instance, target, err)
-				return reconcile.Result{RequeueAfter: time.Minute}, err
+				return reconcile.Result{}, err
 			}
 		}
 		event.NotifyAppUpdated(ctx, r.client, r.recorder, &instance, target)
 	}
 
-	return reconcile.Result{RequeueAfter: time.Minute}, nil
+	return reconcile.Result{RequeueAfter: 20 * time.Second}, nil
 }
 
 func (r *reconcileApp) update(ctx context.Context, base *v1alpha1.App, target *v1alpha1.App, log *log.Logger) error {

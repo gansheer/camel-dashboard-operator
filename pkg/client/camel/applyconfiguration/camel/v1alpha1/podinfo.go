@@ -25,6 +25,7 @@ type PodInfoApplyConfiguration struct {
 	Name                 *string                                     `json:"name,omitempty"`
 	InternalIP           *string                                     `json:"internalIp,omitempty"`
 	Status               *string                                     `json:"status,omitempty"`
+	Ready                *bool                                       `json:"ready,omitempty"`
 	ObservabilityService *ObservabilityServiceInfoApplyConfiguration `json:"observe,omitempty"`
 	Runtime              *RuntimeInfoApplyConfiguration              `json:"runtime,omitempty"`
 }
@@ -56,6 +57,14 @@ func (b *PodInfoApplyConfiguration) WithInternalIP(value string) *PodInfoApplyCo
 // If called multiple times, the Status field is set to the value of the last call.
 func (b *PodInfoApplyConfiguration) WithStatus(value string) *PodInfoApplyConfiguration {
 	b.Status = &value
+	return b
+}
+
+// WithReady sets the Ready field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Ready field is set to the value of the last call.
+func (b *PodInfoApplyConfiguration) WithReady(value bool) *PodInfoApplyConfiguration {
+	b.Ready = &value
 	return b
 }
 

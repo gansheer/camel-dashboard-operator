@@ -15,22 +15,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package app
+package kubernetes
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	corev1 "k8s.io/api/core/v1"
 )
 
-// UpdateFalsePredicate implements a predicate function returning false when updating or generic event.
-type UpdateFalsePredicate struct {
-	predicate.Funcs
-}
-
-func (UpdateFalsePredicate) Update(e event.UpdateEvent) bool {
-	return false
-}
-
-func (UpdateFalsePredicate) Generic(e event.GenericEvent) bool {
-	return false
+func GetPodCondition(pod corev1.Pod, conditionType corev1.PodConditionType) *corev1.PodCondition {
+	for i := range pod.Status.Conditions {
+		condition := pod.Status.Conditions[i]
+		if condition.Type == conditionType {
+			return &condition
+		}
+	}
+	return nil
 }

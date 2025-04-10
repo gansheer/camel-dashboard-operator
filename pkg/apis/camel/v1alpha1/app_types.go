@@ -80,11 +80,12 @@ type AppList struct {
 // AppPhase --.
 type AppPhase string
 
-// AppPhaseRunning --.
-const AppPhaseRunning AppPhase = "Running"
-
-// AppPhaseError --.
-const AppPhaseError AppPhase = "Error"
+const (
+	// AppPhaseRunning --.
+	AppPhaseRunning AppPhase = "Running"
+	// AppPhaseError --.
+	AppPhaseError AppPhase = "Error"
+)
 
 // PodInfo contains a set of information related to the Pod running the Camel application.
 type PodInfo struct {
@@ -94,6 +95,8 @@ type PodInfo struct {
 	InternalIP string `json:"internalIp,omitempty"`
 	// the Pod status
 	Status string `json:"status,omitempty"`
+	// the Pod readiness
+	Ready bool `json:"ready,omitempty"`
 	// Observability services information
 	ObservabilityService *ObservabilityServiceInfo `json:"observe,omitempty"`
 	// Some information about the Camel runtime
