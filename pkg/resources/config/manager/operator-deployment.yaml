@@ -46,7 +46,7 @@ spec:
       serviceAccountName: camel-dashboard-operator
       containers:
         - name: camel-dashboard-operator
-          image: docker.io/apache/camel-dashboard:0.0.1-SNAPSHOT
+          image: default-route-openshift-image-registry.apps-crc.testing/camel-dashboard/camel-dashboard:0.0.1-SNAPSHOT
           imagePullPolicy: IfNotPresent
           command:
             - camel-dashboard

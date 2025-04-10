@@ -23,6 +23,11 @@ resources:
 
 namespace: camel-dashboard
 
+images:
+- name: camel-dashboard-operator
+- newName: default-route-openshift-image-registry.apps-crc.testing/camel-dashboard/camel-dashboard
+  newTag: 0.0.1-SNAPSHOT
+
 patches:
 - path: patch-watch-namespace-global.yaml
   target:
