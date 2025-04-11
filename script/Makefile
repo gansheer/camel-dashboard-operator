@@ -26,8 +26,7 @@ LOCALBIN := $(PROJECT_PATH)/bin
 VERSIONFILE := pkg/util/defaults/defaults.go
 VERSION ?= 0.0.1-SNAPSHOT
 LAST_RELEASED_IMAGE_NAME := camel-dashboard-operator
-LAST_RELEASED_VERSION ?= 2.6.0
-DEFAULT_RUNTIME_VERSION := 3.15.2
+LAST_RELEASED_VERSION ?= 0.0.0
 # Kubernetes tooling
 CONTROLLER_GEN_VERSION := v0.17.2
 CONTROLLER_GEN=$(GOBIN)/controller-gen
@@ -44,15 +43,9 @@ LINTER_VERSION ?= v1.64.5
 GOVULNCHECK_VERSION ?= latest
 LINT_GOGC ?= 20
 LINT_DEADLINE ?= 10m
-DEBUG_MODE ?= false
 
 # Operator building configuration
-BASE_IMAGE_NAME := eclipse-temurin
-BASE_IMAGE_VERSION := 17-jdk
-OFFICIAL_IMAGE_VERSION := 17-jdk
-BASE_IMAGE := $(BASE_IMAGE_NAME):$(BASE_IMAGE_VERSION)
-LOCAL_REPOSITORY := /etc/maven/m2
-OPENSHIFT_REGISTRY := image-registry.openshift-image-registry.svc:5000
+BASE_IMAGE := registry.redhat.io/ubi8/ubi-minimal:8.10
 IMAGE_NAME ?= docker.io/apache/camel-dashboard
 # Test for arm64, fall back to amd64
 IMAGE_ARCH ?= $(if $(filter arm64 aarch64,$(shell uname -m)),arm64,amd64)
@@ -68,7 +61,6 @@ CUSTOM_IMAGE ?= $(IMAGE_NAME)
 CUSTOM_VERSION ?= $(VERSION)
 OPERATOR_VERSION := $(subst -SNAPSHOT,,$(CUSTOM_VERSION))
 
-METADATA_IMAGE_NAME := $(CUSTOM_IMAGE)-metadata
 BUNDLE_IMAGE_NAME ?= $(CUSTOM_IMAGE)-bundle
 RELEASE_GIT_REMOTE := origin
 GIT_COMMIT := $(shell if [ -d .git ]; then git rev-list -1 HEAD; else echo "$(CUSTOM_VERSION)"; fi)
@@ -98,7 +90,6 @@ OPM := opm
 
 # Used to push pre-release artifacts
 STAGING_IMAGE := docker.io/camelk/camel-dashboard
-INSTALL_DEFAULT_KAMELETS ?= true
 
 # When performing integration tests, it is not necessary to always execute build, especially
 # in e2e tests when lots of tests are being executed sequentially & the build has already taken place.
@@ -136,10 +127,6 @@ endif
 
 GOFLAGS = -ldflags "$(GOLDFLAGS)" -trimpath
 
-ifeq ($(DEBUG_MODE),true)
-GOFLAGS += -gcflags="all=-N -l"
-endif
-
 define LICENSE_HEADER
 Licensed to the Apache Software Foundation (ASF) under one or more
 contributor license agreements.  See the NOTICE file distributed with
@@ -159,12 +146,6 @@ endef
 
 export LICENSE_HEADER
 default: build
-
-update-docs:
-	./script/update_docs.sh
-
-update-default-camel:
-	./script/update_default_camel.sh
 
 bump-replace:
 	@# Bump version and replace with the variables provided by the user
@@ -190,23 +171,6 @@ codegen:
 	@echo "  // Version -- " >> $(VERSIONFILE)
 	@echo "  Version = \"$(CUSTOM_VERSION)\"" >> $(VERSIONFILE)
 	@echo "" >> $(VERSIONFILE)
-	@echo "  // DefaultRuntimeVersion -- " >> $(VERSIONFILE)
-	@echo "  DefaultRuntimeVersion = \"$(DEFAULT_RUNTIME_VERSION)\"" >> $(VERSIONFILE)
-	@echo "" >> $(VERSIONFILE)
-	@echo "  // baseImage -- " >> $(VERSIONFILE)
-	@echo "  baseImage = \"$(BASE_IMAGE)\"" >> $(VERSIONFILE)
-	@echo "" >> $(VERSIONFILE)
-	@echo "  // LocalRepository -- " >> $(VERSIONFILE)
-	@echo "  LocalRepository = \"$(LOCAL_REPOSITORY)\"" >> $(VERSIONFILE)
-	@echo "" >> $(VERSIONFILE)
-	@echo "  // ImageName -- " >> $(VERSIONFILE)
-	@echo "  ImageName = \"$(CUSTOM_IMAGE)\"" >> $(VERSIONFILE)
-	@echo "" >> $(VERSIONFILE)
-	@echo "  // OpenShiftRegistryAddress -- " >> $(VERSIONFILE)
-	@echo "  OpenShiftRegistryAddress = \"$(OPENSHIFT_REGISTRY)\"" >> $(VERSIONFILE)
-	@echo "" >> $(VERSIONFILE)
-	@echo "  // installDefaultKamelets -- " >> $(VERSIONFILE)
-	@echo "  installDefaultKamelets = $(INSTALL_DEFAULT_KAMELETS)" >> $(VERSIONFILE)
 	@echo ")" >> $(VERSIONFILE)
 	@echo "" >> $(VERSIONFILE)
 	@echo "// GitCommit must be provided during application build" >> $(VERSIONFILE)
@@ -338,38 +302,21 @@ dir-licenses:
 check-licenses:
 	./script/check_licenses.sh
 
-TARGET_STAGE := base
-ifeq ($(DEBUG_MODE),true)
-	TARGET_STAGE := debug
-	CUSTOM_IMAGE := $(CUSTOM_IMAGE)-debug
-endif
-
-DOCKER_TAG := $(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$(BASE_IMAGE_VERSION)-$(IMAGE_ARCH)
+DOCKER_TAG := $(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$(IMAGE_ARCH)
 
 images: build image-build build-camel-dashboard-platform
 
 image-build:
-ifneq (,$(findstring SNAPSHOT,$(DEFAULT_RUNTIME_VERSION)))
-	./script/package_maven_artifacts.sh -d "$(CAMEL_K_RUNTIME_DIR)" $(DEFAULT_RUNTIME_VERSION)
-endif
-	@echo "####### Building Camel K operator jdk $(BASE_IMAGE_VERSION) arch $(IMAGE_ARCH) container image..."
+	@echo "####### Building Camel K operator arch $(IMAGE_ARCH) container image..."
 	mkdir -p build/_maven_output
 	docker buildx build --target $(TARGET_STAGE) \
 		--platform=linux/$(IMAGE_ARCH) \
-		--build-arg CK_BASE_IMAGE=$(BASE_IMAGE) \
 		--build-arg IMAGE_ARCH=$(IMAGE_ARCH) \
 		--load -t $(DOCKER_TAG) -f build/Dockerfile .
-ifeq ($(BASE_IMAGE_VERSION),$(OFFICIAL_IMAGE_VERSION))
 ifeq ($(IMAGE_ARCH),$(OFFICIAL_IMAGE_ARCH))
-	docker tag $(DOCKER_TAG) $(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$(BASE_IMAGE_VERSION)
 	docker tag $(DOCKER_TAG) $(CUSTOM_IMAGE):$(CUSTOM_VERSION)
 endif
 	docker tag $(DOCKER_TAG) $(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$(IMAGE_ARCH)
-else
-ifeq ($(IMAGE_ARCH),$(OFFICIAL_IMAGE_ARCH))
-	docker tag $(DOCKER_TAG) $(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$(BASE_IMAGE_VERSION)
-endif
-endif
 
 # Mainly used for internal CI purposes
 image-push:
@@ -385,27 +332,18 @@ image-push:
 # docker buildx create --name mybuilder --platform linux/amd64,linux/arm64
 # docker buildx use mybuilder
 
-JDK_VERSIONS = 17-jdk 21-jdk
 ARCH_VERSIONS = amd64 arm64
 images-all:
-	for i in $(JDK_VERSIONS); do \
-		for j in $(ARCH_VERSIONS); do \
-			make IMAGE_ARCH=$$j BASE_IMAGE_VERSION=$$i images; \
-		done \
+	for j in $(ARCH_VERSIONS); do \
+		make IMAGE_ARCH=$$j images; \
 	done
 
 IMAGE_PUSH = $(CUSTOM_IMAGE):$(CUSTOM_VERSION)
 images-push-all:
 	make IMAGE_PUSH=$(CUSTOM_IMAGE):$(CUSTOM_VERSION) images-push
-	for i in $(JDK_VERSIONS); do \
-		make IMAGE_PUSH=$(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$$i images-push ; \
-	done
 
 images-push-staging-all:
 	make IMAGE_PUSH=$(STAGING_IMAGE):$(CUSTOM_VERSION) images-push
-	for i in $(JDK_VERSIONS); do \
-		make IMAGE_PUSH=$(STAGING_IMAGE):$(CUSTOM_VERSION)-$$i images-push ; \
-	done
 
 images-push:
 	docker push $(IMAGE_PUSH)
@@ -421,11 +359,9 @@ images-tag-staging-all:
 	for j in $(ARCH_VERSIONS); do \
 		docker tag $(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$$j $(STAGING_IMAGE):$(CUSTOM_VERSION)-$$j; \
 	done; \
-	for i in $(JDK_VERSIONS); do \
-		docker tag $(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$$i $(STAGING_IMAGE):$(CUSTOM_VERSION)-$$i; \
-		for j in $(ARCH_VERSIONS); do \
-			docker tag $(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$$i-$$j $(STAGING_IMAGE):$(CUSTOM_VERSION)-$$i-$$j; \
-		done \
+	docker tag $(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$$i $(STAGING_IMAGE):$(CUSTOM_VERSION)-$$i; \
+	for j in $(ARCH_VERSIONS); do \
+		docker tag $(CUSTOM_IMAGE):$(CUSTOM_VERSION)-$$i-$$j $(STAGING_IMAGE):$(CUSTOM_VERSION)-$$i-$$j; \
 	done
 
 images-push-staging:

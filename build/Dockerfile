@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG CK_BASE_IMAGE=eclipse-temurin:17-jdk
+ARG CK_BASE_IMAGE=registry.redhat.io/ubi8/ubi-minimal:8.10
 
 FROM $CK_BASE_IMAGE AS base
 
