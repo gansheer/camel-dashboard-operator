@@ -22,18 +22,17 @@ import (
 	"os"
 	"strings"
 
+	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/util/log"
 )
 
 const (
 	OperatorWatchNamespaceEnvVariable = "WATCH_NAMESPACE"
 	operatorNamespaceEnvVariable      = "NAMESPACE"
-	operatorPodNameEnvVariable        = "POD_NAME"
+	CamelAppLabelSelector             = "LABEL_SELECTOR"
 )
 
 const OperatorLockName = "camel-dashboard-lock"
-
-var OperatorImage string
 
 // IsCurrentOperatorGlobal returns true if the operator is configured to watch all namespaces.
 func IsCurrentOperatorGlobal() bool {
@@ -62,15 +61,15 @@ func GetOperatorNamespace() string {
 	return ""
 }
 
-// GetOperatorPodName returns the pod that is running the current operator (if any).
-func GetOperatorPodName() string {
-	if podName, envSet := os.LookupEnv(operatorPodNameEnvVariable); envSet {
-		return podName
-	}
-	return ""
-}
-
 // GetOperatorLockName returns the name of the lock lease that is electing a leader on the particular namespace.
 func GetOperatorLockName(operatorID string) string {
 	return fmt.Sprintf("%s-lock", operatorID)
+}
+
+// GetAppLabelSelector returns the label selector used to determine a Camel application.
+func GetAppLabelSelector() string {
+	if labelSelector, envSet := os.LookupEnv(CamelAppLabelSelector); envSet && labelSelector != "" {
+		return labelSelector
+	}
+	return v1alpha1.AppLabel
 }

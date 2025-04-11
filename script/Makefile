@@ -308,8 +308,7 @@ images: build image-build build-camel-dashboard-platform
 
 image-build:
 	@echo "####### Building Camel K operator arch $(IMAGE_ARCH) container image..."
-	mkdir -p build/_maven_output
-	docker buildx build --target $(TARGET_STAGE) \
+	docker buildx build \
 		--platform=linux/$(IMAGE_ARCH) \
 		--build-arg IMAGE_ARCH=$(IMAGE_ARCH) \
 		--load -t $(DOCKER_TAG) -f build/Dockerfile .

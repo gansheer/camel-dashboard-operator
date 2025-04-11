@@ -56,6 +56,9 @@ func (action *monitorAction) Handle(ctx context.Context, app *v1alpha1.App) (*v1
 	if err != nil {
 		return nil, err
 	}
+	if objOwner == nil {
+		return nil, fmt.Errorf("deployment %s/%s does not exist", app.Namespace, app.Name)
+	}
 	nonManagedApp, err := synthetic.NonManagedCamelApplicationFactory(*objOwner)
 	if err != nil {
 		return nil, err
@@ -135,11 +138,16 @@ func getInfo(pods []v1alpha1.PodInfo) string {
 				pod.Runtime.RuntimeVersion,
 				pod.Runtime.CamelVersion,
 			)
-			sumTotal += pod.Runtime.Exchange.Total
-			sumFailed += pod.Runtime.Exchange.Failed
-			sumPending += pod.Runtime.Exchange.Pending
-			sumSucceeded += pod.Runtime.Exchange.Succeeded
 		}
+		sumTotal += pod.Runtime.Exchange.Total
+		sumFailed += pod.Runtime.Exchange.Failed
+		sumPending += pod.Runtime.Exchange.Pending
+		sumSucceeded += pod.Runtime.Exchange.Succeeded
 	}
+
+	if runtimeInfo == "" {
+		return ""
+	}
+
 	return fmt.Sprintf("%s [exchanges: total %d, succeeded %d, failed %d, pending %d]", runtimeInfo, sumTotal, sumSucceeded, sumFailed, sumPending)
 }

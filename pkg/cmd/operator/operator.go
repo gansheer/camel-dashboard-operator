@@ -18,7 +18,6 @@ limitations under the License.
 package operator
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -35,8 +34,6 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
@@ -152,29 +149,20 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 		}
 	}
 
-	// Set the operator container image if it runs in-container
-	platform.OperatorImage, err = getOperatorImage(ctx, bootstrapClient)
-	exitOnError(err, "cannot get operator container image")
-
 	if !leaderElection {
 		log.Info("Leader election is disabled!")
 	}
 
-	hasAppLabel, err := labels.NewRequirement(v1alpha1.AppLabel, selection.Exists, []string{})
-	exitOnError(err, "cannot create App label selector")
-	labelsSelector := labels.NewSelector().Add(*hasAppLabel)
-
+	labelsSelector := getLabelSelector()
 	selector := cache.ByObject{
 		Label: labelsSelector,
 	}
-
 	if !platform.IsCurrentOperatorGlobal() {
 		selector = cache.ByObject{
 			Label:      labelsSelector,
 			Namespaces: getNamespacesSelector(operatorNamespace, watchNamespace),
 		}
 	}
-
 	selectors := map[ctrl.Object]cache.ByObject{
 		&appsv1.Deployment{}: selector,
 	}
@@ -182,7 +170,6 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 	if ok, err := kubernetes.IsAPIResourceInstalled(bootstrapClient, servingv1.SchemeGroupVersion.String(), reflect.TypeOf(servingv1.Service{}).Name()); ok && err == nil {
 		selectors[&servingv1.Service{}] = selector
 	}
-
 	if ok, err := kubernetes.IsAPIResourceInstalled(bootstrapClient, batchv1.SchemeGroupVersion.String(), reflect.TypeOf(batchv1.CronJob{}).Name()); ok && err == nil {
 		selectors[&batchv1.CronJob{}] = selector
 	}
@@ -190,7 +177,6 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 	options := cache.Options{
 		ByObject: selectors,
 	}
-
 	if !platform.IsCurrentOperatorGlobal() {
 		options.DefaultNamespaces = getNamespacesSelector(operatorNamespace, watchNamespace)
 	}
@@ -225,6 +211,19 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 	exitOnError(mgr.Start(ctx), "manager exited non-zero")
 }
 
+func getLabelSelector() labels.Selector {
+	labelSelector := platform.GetAppLabelSelector()
+	log.Infof("Using (%s) label selector to identify Camel applications on the cluster.", labelSelector)
+	if labelSelector == v1alpha1.AppLabel {
+		log.Infof("NOTE: You can change this setting by adding a variable named %s", platform.CamelAppLabelSelector)
+	}
+	hasAppLabel, err := labels.NewRequirement(labelSelector, selection.Exists, []string{})
+	exitOnError(err, "cannot create App label selector")
+	labelsSelector := labels.NewSelector().Add(*hasAppLabel)
+
+	return labelsSelector
+}
+
 func getNamespacesSelector(operatorNamespace string, watchNamespace string) map[string]cache.Config {
 	namespacesSelector := map[string]cache.Config{
 		operatorNamespace: {},
@@ -242,26 +241,6 @@ func getWatchNamespace() (string, error) {
 		return "", fmt.Errorf("%s must be set", platform.OperatorWatchNamespaceEnvVariable)
 	}
 	return ns, nil
-}
-
-// getOperatorImage returns the image currently used by the running operator if present (when running out of cluster, it may be absent).
-func getOperatorImage(ctx context.Context, c ctrl.Reader) (string, error) {
-	ns := platform.GetOperatorNamespace()
-	name := platform.GetOperatorPodName()
-	if ns == "" || name == "" {
-		return "", nil
-	}
-
-	pod := corev1.Pod{}
-	if err := c.Get(ctx, ctrl.ObjectKey{Namespace: ns, Name: name}, &pod); err != nil && k8serrors.IsNotFound(err) {
-		return "", nil
-	} else if err != nil {
-		return "", err
-	}
-	if len(pod.Spec.Containers) == 0 {
-		return "", fmt.Errorf("no containers found in operator pod")
-	}
-	return pod.Spec.Containers[0].Image, nil
 }
 
 func exitOnError(err error, msg string) {
