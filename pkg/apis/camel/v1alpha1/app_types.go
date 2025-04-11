@@ -66,6 +66,8 @@ type AppStatus struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 	// The number of replicas (pods running)
 	Info string `json:"info,omitempty"`
+	// The conditions catching more detailed information
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // +kubebuilder:object:root=true

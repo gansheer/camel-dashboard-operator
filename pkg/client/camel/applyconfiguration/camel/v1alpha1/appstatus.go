@@ -21,16 +21,18 @@ package v1alpha1
 
 import (
 	camelv1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
+	v1 "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
 // AppStatusApplyConfiguration represents a declarative configuration of the AppStatus type for use
 // with apply.
 type AppStatusApplyConfiguration struct {
-	Phase    *camelv1alpha1.AppPhase     `json:"phase,omitempty"`
-	Image    *string                     `json:"image,omitempty"`
-	Pods     []PodInfoApplyConfiguration `json:"pods,omitempty"`
-	Replicas *int32                      `json:"replicas,omitempty"`
-	Info     *string                     `json:"info,omitempty"`
+	Phase      *camelv1alpha1.AppPhase          `json:"phase,omitempty"`
+	Image      *string                          `json:"image,omitempty"`
+	Pods       []PodInfoApplyConfiguration      `json:"pods,omitempty"`
+	Replicas   *int32                           `json:"replicas,omitempty"`
+	Info       *string                          `json:"info,omitempty"`
+	Conditions []v1.ConditionApplyConfiguration `json:"conditions,omitempty"`
 }
 
 // AppStatusApplyConfiguration constructs a declarative configuration of the AppStatus type for use with
@@ -81,5 +83,18 @@ func (b *AppStatusApplyConfiguration) WithReplicas(value int32) *AppStatusApplyC
 // If called multiple times, the Info field is set to the value of the last call.
 func (b *AppStatusApplyConfiguration) WithInfo(value string) *AppStatusApplyConfiguration {
 	b.Info = &value
+	return b
+}
+
+// WithConditions adds the given value to the Conditions field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the Conditions field.
+func (b *AppStatusApplyConfiguration) WithConditions(values ...*v1.ConditionApplyConfiguration) *AppStatusApplyConfiguration {
+	for i := range values {
+		if values[i] == nil {
+			panic("nil value passed to WithConditions")
+		}
+		b.Conditions = append(b.Conditions, *values[i])
+	}
 	return b
 }

@@ -53,3 +53,10 @@ func NewAppList() AppList {
 		},
 	}
 }
+
+func (appStatus *AppStatus) AddCondition(condition metav1.Condition) {
+	if appStatus.Conditions == nil {
+		appStatus.Conditions = []metav1.Condition{}
+	}
+	appStatus.Conditions = append(appStatus.Conditions, condition)
+}

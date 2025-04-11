@@ -20,6 +20,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
@@ -72,6 +73,20 @@ func (action *monitorAction) Handle(ctx context.Context, app *v1alpha1.App) (*v1
 	}
 	targetApp.Status.Pods = pods
 	targetApp.Status.Replicas = nonManagedApp.GetReplicas()
+	targetApp.Status.Info = getInfo(pods)
+
+	message := "Success"
+	if app.Status.Replicas != nil && len(pods) != int(*app.Status.Replicas) {
+		message = fmt.Sprintf("%d out of %d pods available", len(pods), int(*app.Status.Replicas))
+	}
+
+	targetApp.Status.AddCondition(metav1.Condition{
+		Type:               "Monitored",
+		Status:             metav1.ConditionTrue,
+		LastTransitionTime: metav1.NewTime(time.Now()),
+		Reason:             "MonitoringComplete",
+		Message:            message,
+	})
 
 	return targetApp, nil
 }
@@ -105,4 +120,26 @@ func lookupObject(ctx context.Context, c client.Client, kind, ns string, name st
 	}
 
 	return &obj, nil
+}
+
+func getInfo(pods []v1alpha1.PodInfo) string {
+	runtimeInfo := ""
+	sumTotal := 0
+	sumFailed := 0
+	sumPending := 0
+	sumSucceeded := 0
+	for _, pod := range pods {
+		if runtimeInfo == "" && pod.Runtime != nil {
+			runtimeInfo = fmt.Sprintf("%s - %s (%s)",
+				pod.Runtime.RuntimeProvider,
+				pod.Runtime.RuntimeVersion,
+				pod.Runtime.CamelVersion,
+			)
+			sumTotal += pod.Runtime.Exchange.Total
+			sumFailed += pod.Runtime.Exchange.Failed
+			sumPending += pod.Runtime.Exchange.Pending
+			sumSucceeded += pod.Runtime.Exchange.Succeeded
+		}
+	}
+	return fmt.Sprintf("%s [exchanges: total %d, succeeded %d, failed %d, pending %d]", runtimeInfo, sumTotal, sumSucceeded, sumFailed, sumPending)
 }
