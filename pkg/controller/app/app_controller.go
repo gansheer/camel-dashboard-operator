@@ -19,11 +19,13 @@ package app
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
 	"github.com/squakez/camel-dashboard-operator/pkg/event"
+	"github.com/squakez/camel-dashboard-operator/pkg/platform"
 	"github.com/squakez/camel-dashboard-operator/pkg/util/log"
 	"github.com/squakez/camel-dashboard-operator/pkg/util/monitoring"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -119,7 +121,7 @@ func (r *reconcileApp) Reconcile(ctx context.Context, request reconcile.Request)
 		event.NotifyAppUpdated(ctx, r.client, r.recorder, &instance, target)
 	}
 
-	return reconcile.Result{RequeueAfter: 20 * time.Second}, nil
+	return reconcile.Result{RequeueAfter: getPollingInterval(target)}, nil
 }
 
 func (r *reconcileApp) update(ctx context.Context, base *v1alpha1.App, target *v1alpha1.App, log *log.Logger) error {
@@ -137,4 +139,20 @@ func (r *reconcileApp) update(ctx context.Context, base *v1alpha1.App, target *v
 	}
 
 	return nil
+}
+
+func getPollingInterval(target *v1alpha1.App) time.Duration {
+	defaultPolling := platform.GetPollingInterval()
+	if target.Annotations == nil || target.Annotations[v1alpha1.AppPollingIntervalSecondsAnnotation] == "" {
+		return defaultPolling
+	}
+
+	interval, err := strconv.Atoi(target.Annotations[v1alpha1.AppPollingIntervalSecondsAnnotation])
+	if err == nil {
+		return time.Duration(interval) * time.Second
+	} else {
+		log.Error(err, "could not properly parse polling interval annotation, fallback to default operator value")
+	}
+
+	return defaultPolling
 }

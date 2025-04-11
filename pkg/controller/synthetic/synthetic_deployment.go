@@ -25,7 +25,7 @@ import (
 	"io"
 	"net/http"
 
-	v1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
+	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
 	"github.com/squakez/camel-dashboard-operator/pkg/util/kubernetes"
 	appsv1 "k8s.io/api/apps/v1"

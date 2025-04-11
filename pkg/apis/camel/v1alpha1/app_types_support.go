@@ -30,6 +30,8 @@ const (
 	AppImportedKindLabel = "camel.apache.org/imported-from-kind"
 	// AppImportedNameLabel specifies from what resource an App was imported.
 	AppImportedNameLabel = "camel.apache.org/imported-from-name"
+	// AppPollingIntervalSecondsAnnotation is used to instruct a given application to poll interval.
+	AppPollingIntervalSecondsAnnotation = "camel.apache.org/polling-interval-seconds"
 )
 
 func NewApp(namespace string, name string) App {

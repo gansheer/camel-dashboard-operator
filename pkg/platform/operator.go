@@ -20,7 +20,9 @@ package platform
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/util/log"
@@ -30,6 +32,9 @@ const (
 	OperatorWatchNamespaceEnvVariable = "WATCH_NAMESPACE"
 	operatorNamespaceEnvVariable      = "NAMESPACE"
 	CamelAppLabelSelector             = "LABEL_SELECTOR"
+	CamelAppPollIntervalSeconds       = "POLL_INTERVAL_SECONDS"
+
+	defaultPollingIntervalSeconds = 60
 )
 
 const OperatorLockName = "camel-dashboard-lock"
@@ -72,4 +77,22 @@ func GetAppLabelSelector() string {
 		return labelSelector
 	}
 	return v1alpha1.AppLabel
+}
+
+// getPollingIntervalSeconds returns the polling interval (in seconds) for the operator. It fallbacks to default value.
+func getPollingIntervalSeconds() int {
+	if pollingIntervalSeconds, envSet := os.LookupEnv(CamelAppPollIntervalSeconds); envSet && pollingIntervalSeconds != "" {
+		interval, err := strconv.Atoi(pollingIntervalSeconds)
+		if err == nil {
+			return interval
+		} else {
+			log.Error(err, "could not properly parse polling interval, fallback to default value")
+		}
+	}
+	return defaultPollingIntervalSeconds
+}
+
+// GetPollingInterval returns the polling interval for the operator. It fallbacks to default value.
+func GetPollingInterval() time.Duration {
+	return time.Duration(getPollingIntervalSeconds()) * time.Second
 }
