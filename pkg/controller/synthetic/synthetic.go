@@ -151,17 +151,7 @@ func getSyntheticCamelApp(ctx context.Context, c client.Client, namespace, name 
 }
 
 func createSyntheticCamelApp(ctx context.Context, c client.Client, app *v1alpha1.App) error {
-	newStatus := app.Status
-	app.Status = v1alpha1.AppStatus{}
-	if err := c.Create(ctx, app, ctrl.FieldOwner("camel-dashboard-operator")); err != nil {
-		return err
-	}
-
-	// TODO this is required just for the POC to update status right after a resource is created
-	// The reconciliation should take care of it instead
-	target := app.DeepCopy()
-	target.Status = newStatus
-	return c.Status().Patch(ctx, target, ctrl.MergeFrom(app))
+	return c.Create(ctx, app, ctrl.FieldOwner("camel-dashboard-operator"))
 }
 
 func deleteSyntheticCamelApp(ctx context.Context, c client.Client, namespace, name string) error {
