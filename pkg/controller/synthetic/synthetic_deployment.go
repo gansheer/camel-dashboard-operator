@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/squakez/camel-dashboard-operator/pkg/client"
@@ -105,6 +106,8 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 
 		// Check the services only if the Pod is ready
 		if ready := kubernetes.GetPodCondition(pod, corev1.PodReady); ready != nil && ready.Status == corev1.ConditionTrue {
+			uptime := time.Now().Sub(ready.LastTransitionTime.Time)
+			podInfo.Uptime = &uptime
 			ready := true
 			podInfo.ObservabilityService = &v1alpha1.ObservabilityServiceInfo{}
 			if err := setHealth(&podInfo, podIp); err != nil {

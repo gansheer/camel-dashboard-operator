@@ -213,6 +213,10 @@ spec:
                     status:
                       description: the Pod status
                       type: string
+                    uptime:
+                      description: the Pod updtime
+                      format: int64
+                      type: integer
                   type: object
                 type: array
               replicas:

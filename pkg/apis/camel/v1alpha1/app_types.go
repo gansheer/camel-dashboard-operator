@@ -18,6 +18,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -97,6 +99,8 @@ type PodInfo struct {
 	InternalIP string `json:"internalIp,omitempty"`
 	// the Pod status
 	Status string `json:"status,omitempty"`
+	// the Pod updtime
+	Uptime *time.Duration `json:"uptime,omitempty"`
 	// the Pod readiness
 	Ready bool `json:"ready,omitempty"`
 	// Observability services information
