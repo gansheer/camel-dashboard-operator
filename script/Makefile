@@ -45,7 +45,7 @@ LINT_GOGC ?= 20
 LINT_DEADLINE ?= 10m
 
 # Operator building configuration
-BASE_IMAGE := registry.redhat.io/ubi8/ubi-minimal:8.10
+BASE_IMAGE := registry.access.redhat.com/ubi8/ubi-minimal:8.10
 IMAGE_NAME ?= docker.io/apache/camel-dashboard
 # Test for arm64, fall back to amd64
 IMAGE_ARCH ?= $(if $(filter arm64 aarch64,$(shell uname -m)),arm64,amd64)
