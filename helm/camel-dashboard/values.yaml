@@ -15,9 +15,21 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: camel-dashboard-builder
-  labels:
-    app: "camel-dashboard"
+nameOverride: ""
+fullnameOverride: ""
+
+operator:
+  image: quay.io/camel-tooling/camel-dashboard-operator
+  global: "false"
+  resources: {}
+  securityContext: {}
+  tolerations: []
+  nodeSelector: {}
+  logLevel: "info"
+  ## Deployment annotations
+  annotations:
+  serviceAccount:
+    annotations:
+  extraEnv: []
+    # - name: MY_VAR
+      # value: my_value

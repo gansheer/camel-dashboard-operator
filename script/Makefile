@@ -184,8 +184,8 @@ generate: codegen-tools-install
 	@# it happens we tend to forget some code generation in the past
 	./script/gen_client.sh
 	./script/gen_crd.sh
-	./script/gen_doc.sh
 	cd pkg/apis/camel && $(CONTROLLER_GEN) paths="./..." object
+	./script/gen_helm.sh
 
 codegen-tools-install:
 	@# We must force the installation to make sure we are using the correct version
