@@ -1,1 +1,0 @@
-Thanks for installing Camel Dashboard Operator version {{ .Chart.Version }}!
