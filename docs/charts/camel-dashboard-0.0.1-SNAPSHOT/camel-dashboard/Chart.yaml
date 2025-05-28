@@ -1,0 +1,17 @@
+apiVersion: v2
+appVersion: 0.0.1-SNAPSHOT
+description: TODO
+home: https://camel.apache.org/camel/latest/
+icon: https://github.com/apache/camel/raw/main/docs/img/logo64-d.png
+keywords:
+- integration
+- camel
+- dashboard
+maintainers:
+- email: pcongiusti@apache.org
+  name: pcongiusti
+name: camel-dashboard
+sources:
+- https://github.com/squakez/camel-dashboard-operator
+type: application
+version: 0.0.1-SNAPSHOT

@@ -56,8 +56,6 @@ spec:
               value: {{ .Values.operator.logLevel }}
             - name: OPERATOR_NAME
               value: camel-dashboard
-            - name: CAMEL_APP_IMPORT
-              value: "true"
             - name: POD_NAME
               valueFrom:
                 fieldRef:
