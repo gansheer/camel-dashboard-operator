@@ -67,7 +67,5 @@ func (o *operatorCmdOptions) run(_ *cobra.Command, _ []string) {
 		}
 	}
 
-	// TODO fix this
-	// operator.Run(o.HealthPort, o.MonitoringPort, o.LeaderElection, leaderElectionID)
-	operator.Run(defaultHealthPort, defaultMonitoringPort, true, leaderElectionID)
+	operator.Run(o.HealthPort, o.MonitoringPort, o.LeaderElection, leaderElectionID)
 }
