@@ -1,4 +1,4 @@
-module github.com/squakez/camel-dashboard-operator
+module github.com/camel-tooling/camel-dashboard-operator
 
 go 1.24.0
 

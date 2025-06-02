@@ -21,7 +21,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/cmd"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/cmd"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"

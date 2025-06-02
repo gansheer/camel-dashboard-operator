@@ -18,10 +18,10 @@ limitations under the License.
 package cmd
 
 import (
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/cmd/operator"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/platform"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/defaults"
 	"github.com/spf13/cobra"
-	"github.com/squakez/camel-dashboard-operator/pkg/cmd/operator"
-	"github.com/squakez/camel-dashboard-operator/pkg/platform"
-	"github.com/squakez/camel-dashboard-operator/pkg/util/defaults"
 )
 
 const (

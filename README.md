@@ -15,7 +15,7 @@ The operator uses a simple custom resource known as `app` or `capp` (as Camel Ap
 You can use Helm to install the operator resources. You can install it in any namespace (we conventially use `camel-dashboard` namespace, which, has to be created previously). The default configuration is for a cluster scoped operator (use `--set operator.global=\"false\"` for a namespace scoped operator).
 
 ```
-helm install camel-dashboard https://github.com/squakez/camel-dashboard-operator/raw/refs/heads/main/docs/charts/camel-dashboard-0.0.1-SNAPSHOT.tgz -n camel-dashboard
+helm install camel-dashboard https://github.com/camel-tooling/camel-dashboard-operator/raw/refs/heads/main/docs/charts/camel-dashboard-0.0.1-SNAPSHOT.tgz -n camel-dashboard
 ```
 
 NOTE: the installation procedure is still in experimental phase and uses a snapshot artifacts. It could change in future stable releases.

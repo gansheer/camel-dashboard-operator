@@ -17,7 +17,7 @@ entries:
       name: pcongiusti
     name: camel-dashboard
     sources:
-    - https://github.com/squakez/camel-dashboard-operator
+    - https://github.com/camel-tooling/camel-dashboard-operator
     type: application
     urls:
     - https://apache.github.io/camel-dashboard/charts/camel-dashboard-0.0.1-SNAPSHOT.tgz

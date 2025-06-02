@@ -28,7 +28,7 @@ import (
 	"k8s.io/utils/ptr"
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 
-	v1 "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
+	v1 "github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

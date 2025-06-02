@@ -20,9 +20,9 @@ package app
 import (
 	"context"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
-	"github.com/squakez/camel-dashboard-operator/pkg/client"
-	"github.com/squakez/camel-dashboard-operator/pkg/util/log"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/client"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/log"
 )
 
 // Action --.

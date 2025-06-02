@@ -25,7 +25,7 @@ appVersion: 0.0.1-SNAPSHOT
 icon: https://github.com/apache/camel/raw/main/docs/img/logo64-d.png
 home: https://camel.apache.org/camel/latest/
 sources:
-  - https://github.com/squakez/camel-dashboard-operator
+  - https://github.com/camel-tooling/camel-dashboard-operator
 keywords:
   - integration
   - camel

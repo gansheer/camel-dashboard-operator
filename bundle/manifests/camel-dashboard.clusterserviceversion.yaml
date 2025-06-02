@@ -67,7 +67,7 @@ spec:
     name: camel-dashboard-operator
   links:
   - name: Camel Dashboard source code repository
-    url: https://github.com/squakez/camel-dashboard
+    url: https://github.com/camel-tooling/camel-dashboard
   maintainers:
   - email: users@camel.apache.org
     name: The Apache Software Foundation

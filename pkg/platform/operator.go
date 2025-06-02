@@ -24,8 +24,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
-	"github.com/squakez/camel-dashboard-operator/pkg/util/log"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/log"
 )
 
 const (
