@@ -22,7 +22,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/util"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util"
 )
 
 func main() {

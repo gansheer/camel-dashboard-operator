@@ -27,8 +27,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/util/log"
-	"github.com/squakez/camel-dashboard-operator/pkg/util/patch"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/log"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/patch"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"

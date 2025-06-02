@@ -25,14 +25,14 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/util/io"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/io"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/util"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util"
 
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	clientscheme "k8s.io/client-go/kubernetes/scheme"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/util/kubernetes"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/kubernetes"
 )
 
 func main() {

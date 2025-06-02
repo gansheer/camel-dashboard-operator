@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
-	"github.com/squakez/camel-dashboard-operator/pkg/client"
-	"github.com/squakez/camel-dashboard-operator/pkg/controller/synthetic"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/client"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/controller/synthetic"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"

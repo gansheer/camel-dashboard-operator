@@ -25,30 +25,30 @@ cd $location/../pkg/client/camel
 echo "Generating Go client code..."
 
 $(go env GOPATH)/bin/applyconfiguration-gen \
-	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1" \
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1" \
 	--go-header-file=../../../script/headers/default.txt \
 	--output-dir=./applyconfiguration/ \
-	--output-pkg=github.com/squakez/camel-dashboard-operator/pkg/client/camel/applyconfiguration
+	--output-pkg=github.com/camel-tooling/camel-dashboard-operator/pkg/client/camel/applyconfiguration
 
 $(go env GOPATH)/bin/client-gen \
 	--input camel/v1alpha1 \
 	--go-header-file=../../../script/headers/default.txt \
 	--clientset-name "versioned"  \
-	--input-base=github.com/squakez/camel-dashboard-operator/pkg/apis \
-	--apply-configuration-package=github.com/squakez/camel-dashboard-operator/pkg/client/camel/applyconfiguration \
+	--input-base=github.com/camel-tooling/camel-dashboard-operator/pkg/apis \
+	--apply-configuration-package=github.com/camel-tooling/camel-dashboard-operator/pkg/client/camel/applyconfiguration \
 	--output-dir=./clientset/ \
-	--output-pkg=github.com/squakez/camel-dashboard-operator/pkg/client/camel/clientset
+	--output-pkg=github.com/camel-tooling/camel-dashboard-operator/pkg/client/camel/clientset
 
 $(go env GOPATH)/bin/lister-gen \
-	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1" \
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1" \
 	--go-header-file=../../../script/headers/default.txt \
 	--output-dir=./listers/ \
-	--output-pkg=github.com/squakez/camel-dashboard-operator/pkg/client/camel/listers
+	--output-pkg=github.com/camel-tooling/camel-dashboard-operator/pkg/client/camel/listers
 
 $(go env GOPATH)/bin/informer-gen \
-    "github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1" \
-	--versioned-clientset-package=github.com/squakez/camel-dashboard-operator/pkg/client/camel/clientset/versioned \
-	--listers-package=github.com/squakez/camel-dashboard-operator/pkg/client/camel/listers \
+    "github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1" \
+	--versioned-clientset-package=github.com/camel-tooling/camel-dashboard-operator/pkg/client/camel/clientset/versioned \
+	--listers-package=github.com/camel-tooling/camel-dashboard-operator/pkg/client/camel/listers \
 	--go-header-file=../../../script/headers/default.txt \
 	--output-dir=./informers/ \
-	--output-pkg=github.com/squakez/camel-dashboard-operator/pkg/client/camel/informers
+	--output-pkg=github.com/camel-tooling/camel-dashboard-operator/pkg/client/camel/informers

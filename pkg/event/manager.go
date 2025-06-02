@@ -20,8 +20,8 @@ package event
 import (
 	"context"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
-	"github.com/squakez/camel-dashboard-operator/pkg/client"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/record"
 

@@ -49,16 +49,16 @@ import (
 
 	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/apis"
-	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
-	"github.com/squakez/camel-dashboard-operator/pkg/client"
-	"github.com/squakez/camel-dashboard-operator/pkg/controller"
-	"github.com/squakez/camel-dashboard-operator/pkg/controller/synthetic"
-	"github.com/squakez/camel-dashboard-operator/pkg/platform"
-	"github.com/squakez/camel-dashboard-operator/pkg/util"
-	"github.com/squakez/camel-dashboard-operator/pkg/util/defaults"
-	"github.com/squakez/camel-dashboard-operator/pkg/util/kubernetes"
-	logutil "github.com/squakez/camel-dashboard-operator/pkg/util/log"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/client"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/controller"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/controller/synthetic"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/platform"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/defaults"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/kubernetes"
+	logutil "github.com/camel-tooling/camel-dashboard-operator/pkg/util/log"
 )
 
 var log = logutil.Log.WithName("cmd")

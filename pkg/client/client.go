@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util"
 	"github.com/sirupsen/logrus"
-	"github.com/squakez/camel-dashboard-operator/pkg/util"
 	"k8s.io/client-go/scale"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -43,10 +43,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/squakez/camel-dashboard-operator/pkg/apis"
-	"github.com/squakez/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
-	camel "github.com/squakez/camel-dashboard-operator/pkg/client/camel/clientset/versioned"
-	camelv1alpha1 "github.com/squakez/camel-dashboard-operator/pkg/client/camel/clientset/versioned/typed/camel/v1alpha1"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
+	camel "github.com/camel-tooling/camel-dashboard-operator/pkg/client/camel/clientset/versioned"
+	camelv1alpha1 "github.com/camel-tooling/camel-dashboard-operator/pkg/client/camel/clientset/versioned/typed/camel/v1alpha1"
 )
 
 const (
