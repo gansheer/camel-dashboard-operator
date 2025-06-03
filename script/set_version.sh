@@ -24,7 +24,7 @@ fi
 
 location=$(dirname $0)
 version=$1
-image_name=${2:-docker.io\/apache\/camel-dashboard}
+image_name=${2:-quay.io\/camel-tooling\/camel-dashboard-operator}
 sanitized_image_name=${image_name//\//\\\/}
 k8s_version_label="app.kubernetes.io\/version"
 

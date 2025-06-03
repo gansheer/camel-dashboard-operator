@@ -46,7 +46,7 @@ LINT_DEADLINE ?= 10m
 
 # Operator building configuration
 BASE_IMAGE := registry.access.redhat.com/ubi8/ubi-minimal:8.10
-IMAGE_NAME ?= docker.io/apache/camel-dashboard
+IMAGE_NAME ?= quay.io/camel-tooling/camel-dashboard-operator
 # Test for arm64, fall back to amd64
 IMAGE_ARCH ?= $(if $(filter arm64 aarch64,$(shell uname -m)),arm64,amd64)
 OFFICIAL_IMAGE_ARCH := amd64
@@ -70,7 +70,7 @@ MANAGER := pkg/resources/config/manager
 MANIFESTS := pkg/resources/config/manifests
 DEFAULT_CHANNEL ?= $(shell echo "stable-v$(word 1,$(subst ., ,$(lastword $(OPERATOR_VERSION))))")
 CHANNELS ?= $(DEFAULT_CHANNEL),latest
-PACKAGE := camel-dashboard
+PACKAGE := camel-dashboard-operator
 CSV_VERSION := $(OPERATOR_VERSION)
 CSV_NAME := $(PACKAGE).v$(CSV_VERSION)
 # Final CSV name that replaces the name required by the operator-sdk
@@ -89,7 +89,7 @@ INDEX_DIR := index
 OPM := opm
 
 # Used to push pre-release artifacts
-STAGING_IMAGE := docker.io/camelk/camel-dashboard
+STAGING_IMAGE := quay.io/camel-tooling/camel-dashboard-operator
 
 # When performing integration tests, it is not necessary to always execute build, especially
 # in e2e tests when lots of tests are being executed sequentially & the build has already taken place.
