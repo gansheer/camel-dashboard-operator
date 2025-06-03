@@ -22,7 +22,7 @@ metadata:
     capabilities: Full Lifecycle
     categories: Integration & Delivery
     certified: "false"
-    containerImage: docker.io/apache/camel-dashboard:0.0.1-SNAPSHOT
+    containerImage: quay.io/camel-tooling/camel-dashboard-operator:0.0.1-SNAPSHOT
     createdAt: 2025-04-04T13:25:02Z
     description: Apache Camel Dashboard is a tool that helps you discover and monitor
       Camel applications running on your cluster.

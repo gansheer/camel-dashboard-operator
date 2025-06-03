@@ -34,6 +34,6 @@ resources:
 patchesStrategicMerge:
 - patch-delete-user-cluster-role.yaml
 images:
-- name: docker.io/apache/camel-dashboard
-  newName: docker.io/apache/camel-dashboard
+- name: quay.io/camel-tooling/camel-dashboard-operator
+  newName: quay.io/camel-tooling/camel-dashboard-operator
   newTag: 0.0.1-SNAPSHOT
