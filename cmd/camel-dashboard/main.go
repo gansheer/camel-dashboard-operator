@@ -18,31 +18,9 @@ limitations under the License.
 package main
 
 import (
-	"context"
-	"os"
-
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/cmd"
-
-	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	// Cancel ctx as soon as main returns
-	defer cancel()
-
-	rootCmd, err := cmd.NewKamelCommand(ctx)
-	exitOnError(err)
-
-	err = rootCmd.Execute()
-	exitOnError(err)
-}
-
-func exitOnError(err error) {
-	if err != nil {
-		os.Exit(1)
-	}
+	cmd.Run()
 }

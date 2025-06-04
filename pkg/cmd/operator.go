@@ -18,47 +18,34 @@ limitations under the License.
 package cmd
 
 import (
+	"flag"
+
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/cmd/operator"
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/platform"
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/defaults"
-	"github.com/spf13/cobra"
 )
 
 const (
-	operatorCommand       = "operator"
 	defaultHealthPort     = 8081
 	defaultMonitoringPort = 8080
 )
 
-func newCmdOperator(rootCmdOptions *RootCmdOptions) (*cobra.Command, *operatorCmdOptions) {
-	options := operatorCmdOptions{}
+var (
+	healthPort       int
+	monitoringPort   int
+	leaderElection   bool
+	leaderElectionID string
+)
 
-	cmd := cobra.Command{
-		Use:     "operator",
-		Short:   "Run the Camel Dashboard operator",
-		Long:    `Run the Camel Dashboard operator`,
-		Hidden:  true,
-		PreRunE: decode(&options, rootCmdOptions.Flags),
-		Run:     options.run,
-	}
+func Run() {
+	flag.IntVar(&healthPort, "health-port", 8081, "The health port")
+	flag.IntVar(&monitoringPort, "monitoring-port", 8080, "The monitoring port")
+	flag.BoolVar(&leaderElection, "leader-election", true, "Use leader election")
+	flag.StringVar(&leaderElectionID, "leader-election-id", "", "Leader election ID")
 
-	cmd.Flags().Int32("health-port", defaultHealthPort, "The port of the health endpoint")
-	cmd.Flags().Int32("monitoring-port", defaultMonitoringPort, "The port of the metrics endpoint")
-	cmd.Flags().Bool("leader-election", true, "Use leader election")
-	cmd.Flags().String("leader-election-id", "", "Use the given ID as the leader election Lease name")
+	flag.Parse()
 
-	return &cmd, &options
-}
-
-type operatorCmdOptions struct {
-	HealthPort       int32  `mapstructure:"health-port"`
-	MonitoringPort   int32  `mapstructure:"monitoring-port"`
-	LeaderElection   bool   `mapstructure:"leader-election"`
-	LeaderElectionID string `mapstructure:"leader-election-id"`
-}
-
-func (o *operatorCmdOptions) run(_ *cobra.Command, _ []string) {
-	leaderElectionID := o.LeaderElectionID
+	leaderElectionID := leaderElectionID
 	if leaderElectionID == "" {
 		if defaults.OperatorID() != "" {
 			leaderElectionID = platform.GetOperatorLockName(defaults.OperatorID())
@@ -67,5 +54,5 @@ func (o *operatorCmdOptions) run(_ *cobra.Command, _ []string) {
 		}
 	}
 
-	operator.Run(o.HealthPort, o.MonitoringPort, o.LeaderElection, leaderElectionID)
+	operator.Run(healthPort, monitoringPort, leaderElection, leaderElectionID)
 }

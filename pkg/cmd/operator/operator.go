@@ -18,7 +18,6 @@ limitations under the License.
 package operator
 
 import (
-	"flag"
 	"fmt"
 	"os"
 	"reflect"
@@ -75,9 +74,7 @@ func printVersion() {
 }
 
 // Run starts the Camel Dashboard operator.
-func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID string) {
-	flag.Parse()
-
+func Run(healthPort, monitoringPort int, leaderElection bool, leaderElectionID string) {
 	// The logger instantiated here can be changed to any logger
 	// implementing the logr.Logger interface. This logger will
 	// be propagated through the whole operator, generating
@@ -187,8 +184,8 @@ func Run(healthPort, monitoringPort int32, leaderElection bool, leaderElectionID
 		LeaderElectionID:              leaderElectionID,
 		LeaderElectionResourceLock:    resourcelock.LeasesResourceLock,
 		LeaderElectionReleaseOnCancel: true,
-		HealthProbeBindAddress:        ":" + strconv.Itoa(int(healthPort)),
-		Metrics:                       metricsserver.Options{BindAddress: ":" + strconv.Itoa(int(monitoringPort))},
+		HealthProbeBindAddress:        ":" + strconv.Itoa(healthPort),
+		Metrics:                       metricsserver.Options{BindAddress: ":" + strconv.Itoa(monitoringPort)},
 		Cache:                         options,
 	})
 	exitOnError(err, "Some error happened while creating a new manager")
