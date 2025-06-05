@@ -138,10 +138,12 @@ func getInfo(pods []v1alpha1.PodInfo) string {
 				pod.Runtime.RuntimeVersion,
 				pod.Runtime.CamelVersion,
 			)
-			sumTotal += pod.Runtime.Exchange.Total
-			sumFailed += pod.Runtime.Exchange.Failed
-			sumPending += pod.Runtime.Exchange.Pending
-			sumSucceeded += pod.Runtime.Exchange.Succeeded
+			if pod.Runtime.Exchange != nil {
+				sumTotal += pod.Runtime.Exchange.Total
+				sumFailed += pod.Runtime.Exchange.Failed
+				sumPending += pod.Runtime.Exchange.Pending
+				sumSucceeded += pod.Runtime.Exchange.Succeeded
+			}
 		}
 	}
 
