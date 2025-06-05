@@ -129,12 +129,8 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 }
 
 func setMetrics(podInfo *v1alpha1.PodInfo, podIp string) error {
-	// TODO, use instead
-	// c.CoreV1().
-	// 	Pods(pod.Namespace).
-	// 	ProxyGet(strings.ToLower(string(p.HTTPGet.Scheme)), pod.Name, strconv.Itoa(port), p.HTTPGet.Path, params).
-	// 	DoRaw(probeCtx)
-	// also for health ping
+	// NOTE: we're not using a proxy as a design choice in order
+	// to have a faster turnaround.
 	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/%s", podIp, observabilityPortDefault, observabilityMetricsDefault), nil)
 	if err != nil {
 		return err
@@ -265,6 +261,8 @@ func populateRuntimeExchangeInflight(metric *dto.MetricFamily, metricName string
 }
 
 func setHealth(podInfo *v1alpha1.PodInfo, podIp string) error {
+	// NOTE: we're not using a proxy as a design choice in order
+	// to have a faster turnaround.
 	resp, err := http.Get(fmt.Sprintf("http://%s:%d/%s", podIp, observabilityPortDefault, observabilityHealthDefault))
 	if err != nil {
 		return err
