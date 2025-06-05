@@ -29,6 +29,7 @@ import (
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/client"
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/kubernetes"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/log"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -106,15 +107,17 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 
 		// Check the services only if the Pod is ready
 		if ready := kubernetes.GetPodCondition(pod, corev1.PodReady); ready != nil && ready.Status == corev1.ConditionTrue {
-			uptime := time.Now().Sub(ready.LastTransitionTime.Time)
+			uptime := time.Since(ready.LastTransitionTime.Time)
 			podInfo.Uptime = &uptime
 			ready := true
 			podInfo.ObservabilityService = &v1alpha1.ObservabilityServiceInfo{}
 			if err := setHealth(&podInfo, podIp); err != nil {
 				ready = false
+				log.Errorf(err, "Could not scrape health endpoint")
 			}
 			if err := setMetrics(&podInfo, podIp); err != nil {
 				ready = false
+				log.Errorf(err, "Could not scrape metrics endpoint")
 			}
 			podInfo.Ready = ready
 		}
@@ -132,7 +135,14 @@ func setMetrics(podInfo *v1alpha1.PodInfo, podIp string) error {
 	// 	ProxyGet(strings.ToLower(string(p.HTTPGet.Scheme)), pod.Name, strconv.Itoa(port), p.HTTPGet.Path, params).
 	// 	DoRaw(probeCtx)
 	// also for health ping
-	resp, err := http.Get(fmt.Sprintf("http://%s:%d/%s", podIp, observabilityPortDefault, observabilityMetricsDefault))
+	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/%s", podIp, observabilityPortDefault, observabilityMetricsDefault), nil)
+	if err != nil {
+		return err
+	}
+	// Quarkus runtime specific, see https://github.com/apache/camel-quarkus/issues/7405
+	req.Header.Add("Accept", "text/plain, */*")
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -141,28 +151,37 @@ func setMetrics(podInfo *v1alpha1.PodInfo, podIp string) error {
 		podInfo.ObservabilityService.MetricsEndpoint = observabilityMetricsDefault
 		podInfo.ObservabilityService.MetricsPort = observabilityPortDefault
 
+		if podInfo.Runtime == nil {
+			podInfo.Runtime = &v1alpha1.RuntimeInfo{}
+		}
+		if podInfo.Runtime.Exchange == nil {
+			podInfo.Runtime.Exchange = &v1alpha1.ExchangeInfo{}
+		}
+
 		metrics, err := parseMetrics(resp.Body)
 		if err != nil {
 			return err
 		}
 		if metric, ok := metrics["app_info"]; ok {
-			populateRuntimeInfo(metric, podInfo)
+			populateRuntimeInfo(metric, "app_info", podInfo)
 		}
 		if metric, ok := metrics["camel_exchanges_total"]; ok {
-			populateRuntimeExchangeTotal(metric, podInfo)
+			populateRuntimeExchangeTotal(metric, "camel_exchanges_total", podInfo)
 		}
 		if metric, ok := metrics["camel_exchanges_failed_total"]; ok {
-			populateRuntimeExchangeFailedTotal(metric, podInfo)
+			populateRuntimeExchangeFailedTotal(metric, "camel_exchanges_failed_total", podInfo)
 		}
 		if metric, ok := metrics["camel_exchanges_succeeded_total"]; ok {
-			populateRuntimeExchangeSucceededTotal(metric, podInfo)
+			populateRuntimeExchangeSucceededTotal(metric, "camel_exchanges_succeeded_total", podInfo)
 		}
 		if metric, ok := metrics["camel_exchanges_inflight"]; ok {
-			populateRuntimeExchangeInflight(metric, podInfo)
+			populateRuntimeExchangeInflight(metric, "camel_exchanges_inflight", podInfo)
 		}
+
+		return nil
 	}
 
-	return nil
+	return fmt.Errorf("HTTP status not OK, it was %d", resp.StatusCode)
 }
 
 func parseMetrics(reader io.Reader) (map[string]*dto.MetricFamily, error) {
@@ -175,13 +194,12 @@ func parseMetrics(reader io.Reader) (map[string]*dto.MetricFamily, error) {
 	return mf, nil
 }
 
-func populateRuntimeInfo(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
-	if podInfo.Runtime == nil {
-		podInfo.Runtime = &v1alpha1.RuntimeInfo{}
+func populateRuntimeInfo(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
+	if len(metric.GetMetric()) != 1 {
+		log.Infof("WARN: expected exactly one %s metric, got %d", metricName, len(metric.GetMetric()))
+		return
 	}
-	if podInfo.Runtime.Exchange == nil {
-		podInfo.Runtime.Exchange = &v1alpha1.ExchangeInfo{}
-	}
+
 	for _, label := range metric.GetMetric()[0].GetLabel() {
 		switch ptr.Deref(label.Name, "") {
 		case "camel_runtime_provider":
@@ -194,19 +212,55 @@ func populateRuntimeInfo(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
 	}
 }
 
-func populateRuntimeExchangeTotal(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
+func populateRuntimeExchangeTotal(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
+	if len(metric.GetMetric()) == 0 {
+		log.Infof("WARN: expected at least 1 %s metric, got %d", metricName, len(metric.GetMetric()))
+		return
+	}
+	if metric.GetMetric()[0].GetCounter() == nil {
+		log.Infof("WARN: expected %s metric to be a counter", metricName)
+		return
+	}
+
 	podInfo.Runtime.Exchange.Total = int(ptr.Deref(metric.GetMetric()[0].GetCounter().Value, 0))
 }
 
-func populateRuntimeExchangeFailedTotal(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
+func populateRuntimeExchangeFailedTotal(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
+	if len(metric.GetMetric()) == 0 {
+		log.Infof("WARN: expected at least 1 %s metric, got %d", metricName, len(metric.GetMetric()))
+		return
+	}
+	if metric.GetMetric()[0].GetCounter() == nil {
+		log.Infof("WARN: expected %s metric to be a counter", metricName)
+		return
+	}
+
 	podInfo.Runtime.Exchange.Failed = int(ptr.Deref(metric.GetMetric()[0].GetCounter().Value, 0))
 }
 
-func populateRuntimeExchangeSucceededTotal(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
+func populateRuntimeExchangeSucceededTotal(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
+	if len(metric.GetMetric()) == 0 {
+		log.Infof("WARN: expected at least 1 exchange_succeeded_total metric, got %d", len(metric.GetMetric()))
+		return
+	}
+	if metric.GetMetric()[0].GetCounter() == nil {
+		log.Infof("WARN: expected %s metric to be a counter", metricName)
+		return
+	}
+
 	podInfo.Runtime.Exchange.Succeeded = int(ptr.Deref(metric.GetMetric()[0].GetCounter().Value, 0))
 }
 
-func populateRuntimeExchangeInflight(metric *dto.MetricFamily, podInfo *v1alpha1.PodInfo) {
+func populateRuntimeExchangeInflight(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
+	if len(metric.GetMetric()) == 0 {
+		log.Infof("WARN: expected at least 1 exchange_inflight metric, got %d", len(metric.GetMetric()))
+		return
+	}
+	if metric.GetMetric()[0].GetGauge() == nil {
+		log.Infof("WARN: expected %s metric to be a gauge", metricName)
+		return
+	}
+
 	podInfo.Runtime.Exchange.Pending = int(ptr.Deref(metric.GetMetric()[0].GetGauge().Value, 0))
 }
 
