@@ -20,6 +20,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
@@ -76,7 +77,15 @@ func (action *monitorAction) Handle(ctx context.Context, app *v1alpha1.App) (*v1
 	}
 	targetApp.Status.Pods = pods
 	targetApp.Status.Replicas = nonManagedApp.GetReplicas()
-	targetApp.Status.Info = getInfo(pods)
+	targetRuntimeInfo := getInfo(pods)
+	if targetRuntimeInfo != nil {
+		targetApp.Status.Info = formatRuntimeInfo(targetRuntimeInfo)
+	}
+	appRuntimeInfo := getInfo(app.Status.Pods)
+	if appRuntimeInfo != nil {
+		pollingInterval := getPollingInterval(targetApp)
+		targetApp.Status.SuccessRate = getSLIExchangeSuccessRate(*appRuntimeInfo, *targetRuntimeInfo, &pollingInterval)
+	}
 
 	message := "Success"
 	if app.Status.Replicas != nil && len(pods) != int(*app.Status.Replicas) {
@@ -125,31 +134,64 @@ func lookupObject(ctx context.Context, c client.Client, kind, ns string, name st
 	return &obj, nil
 }
 
-func getInfo(pods []v1alpha1.PodInfo) string {
-	runtimeInfo := ""
-	sumTotal := 0
-	sumFailed := 0
-	sumPending := 0
-	sumSucceeded := 0
+func getInfo(pods []v1alpha1.PodInfo) *v1alpha1.RuntimeInfo {
+	runtimeInfo := v1alpha1.RuntimeInfo{
+		Exchange: &v1alpha1.ExchangeInfo{},
+	}
+
 	for _, pod := range pods {
-		if runtimeInfo == "" && pod.Runtime != nil {
-			runtimeInfo = fmt.Sprintf("%s - %s (%s)",
-				pod.Runtime.RuntimeProvider,
-				pod.Runtime.RuntimeVersion,
-				pod.Runtime.CamelVersion,
-			)
-			if pod.Runtime.Exchange != nil {
-				sumTotal += pod.Runtime.Exchange.Total
-				sumFailed += pod.Runtime.Exchange.Failed
-				sumPending += pod.Runtime.Exchange.Pending
-				sumSucceeded += pod.Runtime.Exchange.Succeeded
-			}
+		// Collect runtime information only once
+		if runtimeInfo.RuntimeProvider == "" && pod.Runtime != nil {
+			runtimeInfo.RuntimeProvider = pod.Runtime.RuntimeProvider
+			runtimeInfo.RuntimeVersion = pod.Runtime.RuntimeVersion
+			runtimeInfo.CamelVersion = pod.Runtime.CamelVersion
+		}
+		// Sum all the exchanges processed
+		if pod.Runtime != nil && pod.Runtime.Exchange != nil {
+			runtimeInfo.Exchange.Total += pod.Runtime.Exchange.Total
+			runtimeInfo.Exchange.Failed += pod.Runtime.Exchange.Failed
+			runtimeInfo.Exchange.Pending += pod.Runtime.Exchange.Pending
+			runtimeInfo.Exchange.Succeeded += pod.Runtime.Exchange.Succeeded
 		}
 	}
 
-	if runtimeInfo == "" {
-		return ""
+	if runtimeInfo.RuntimeProvider == "" && runtimeInfo.Exchange.Total == 0 {
+		// Likely there was no available metric at all
+		return nil
 	}
 
-	return fmt.Sprintf("%s [exchanges: total %d, succeeded %d, failed %d, pending %d]", runtimeInfo, sumTotal, sumSucceeded, sumFailed, sumPending)
+	return &runtimeInfo
+}
+
+func formatRuntimeInfo(runtimeInfo *v1alpha1.RuntimeInfo) string {
+	return fmt.Sprintf(
+		"%s - %s (%s) [exchanges: total %d, succeeded %d, failed %d, pending %d]",
+		runtimeInfo.RuntimeProvider, runtimeInfo.RuntimeVersion, runtimeInfo.CamelVersion,
+		runtimeInfo.Exchange.Total, runtimeInfo.Exchange.Succeeded, runtimeInfo.Exchange.Failed, runtimeInfo.Exchange.Pending,
+	)
+}
+
+func getSLIExchangeSuccessRate(app, target v1alpha1.RuntimeInfo, pollingInteval *time.Duration) *v1alpha1.SLIExchangeSuccessRate {
+	var failureRate float64
+	sliExchangeSuccessRate := v1alpha1.SLIExchangeSuccessRate{
+		SamplingIntervalDuration: pollingInteval,
+	}
+
+	totalLastInterval := target.Exchange.Total - app.Exchange.Total
+	failedLastInterval := target.Exchange.Failed - app.Exchange.Failed
+	failureRate = float64(failedLastInterval) / float64(totalLastInterval) * 100
+	successRate := 100 - failureRate
+	sliExchangeSuccessRate.SuccessPercentage = strconv.FormatFloat(successRate, 'f', 2, 64)
+	sliExchangeSuccessRate.SamplingIntervalTotal = totalLastInterval
+	sliExchangeSuccessRate.SamplingIntervalFailed = failedLastInterval
+
+	if failureRate > 10 {
+		sliExchangeSuccessRate.Status = "Error"
+	} else if failureRate > 5 {
+		sliExchangeSuccessRate.Status = "Warning"
+	} else {
+		sliExchangeSuccessRate.Status = "OK"
+	}
+
+	return &sliExchangeSuccessRate
 }

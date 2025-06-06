@@ -40,6 +40,10 @@ spec:
       jsonPath: .status.phase
       name: Phase
       type: string
+    - description: The success rate SLI
+      jsonPath: .status.sliExchangeSuccessRate.status
+      name: Exchange SLI
+      type: string
     - description: The Camel App image
       jsonPath: .status.image
       name: Image
@@ -141,7 +145,7 @@ spec:
                 description: the image used to run the application
                 type: string
               info:
-                description: The number of replicas (pods running)
+                description: A resume of the main App parameters
                 type: string
               phase:
                 description: the actual phase
@@ -223,6 +227,26 @@ spec:
                 description: The number of replicas (pods running)
                 format: int32
                 type: integer
+              sliExchangeSuccessRate:
+                description: The percentage of success rate
+                properties:
+                  samplingInterval:
+                    description: the interval time considered
+                    format: int64
+                    type: integer
+                  samplingIntervalFailed:
+                    description: the failed exchanges in the interval time considered
+                    type: integer
+                  samplingIntervalTotal:
+                    description: the total exchanges in the interval time considered
+                    type: integer
+                  status:
+                    description: a human readable status information
+                    type: string
+                  successPercentage:
+                    description: the success percentage
+                    type: string
+                type: object
             type: object
         type: object
     served: true

@@ -45,6 +45,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &camelv1alpha1.PodInfoApplyConfiguration{}
 	case v1alpha1.SchemeGroupVersion.WithKind("RuntimeInfo"):
 		return &camelv1alpha1.RuntimeInfoApplyConfiguration{}
+	case v1alpha1.SchemeGroupVersion.WithKind("SLIExchangeSuccessRate"):
+		return &camelv1alpha1.SLIExchangeSuccessRateApplyConfiguration{}
 
 	}
 	return nil
