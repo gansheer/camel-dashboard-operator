@@ -35,6 +35,7 @@ const (
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:path=apps,scope=Namespaced,shortName=capp,categories=camel
 // +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`,description="The Camel App phase"
+// +kubebuilder:printcolumn:name="Exchange SLI",type=string,JSONPath=`.status.sliExchangeSuccessRate.status`,description="The success rate SLI"
 // +kubebuilder:printcolumn:name="Image",type=string,JSONPath=`.status.image`,description="The Camel App image"
 // +kubebuilder:printcolumn:name="Replicas",type=string,JSONPath=`.status.replicas`,description="The Camel App Pods"
 // +kubebuilder:printcolumn:name="Info",type=string,JSONPath=`.status.info`,description="The Camel App info"
@@ -66,8 +67,10 @@ type AppStatus struct {
 	Pods []PodInfo `json:"pods,omitempty"`
 	// The number of replicas (pods running)
 	Replicas *int32 `json:"replicas,omitempty"`
-	// The number of replicas (pods running)
+	// A resume of the main App parameters
 	Info string `json:"info,omitempty"`
+	// The percentage of success rate
+	SuccessRate *SLIExchangeSuccessRate `json:"sliExchangeSuccessRate,omitempty"`
 	// The conditions catching more detailed information
 	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
@@ -145,4 +148,18 @@ type ExchangeInfo struct {
 	Failed int `json:"failed,omitempty"`
 	// The total number of exchanges pending (in Camel jargon, inflight exchanges)
 	Pending int `json:"pending,omitempty"`
+}
+
+// SLIExchangeSuccessRate contains the information related to the SLI.
+type SLIExchangeSuccessRate struct {
+	// the success percentage
+	SuccessPercentage string `json:"successPercentage,omitempty"`
+	// the interval time considered
+	SamplingIntervalDuration *time.Duration `json:"samplingInterval,omitempty"`
+	// the total exchanges in the interval time considered
+	SamplingIntervalTotal int `json:"samplingIntervalTotal,omitempty"`
+	// the failed exchanges in the interval time considered
+	SamplingIntervalFailed int `json:"samplingIntervalFailed,omitempty"`
+	// a human readable status information
+	Status string `json:"status,omitempty"`
 }

@@ -27,12 +27,13 @@ import (
 // AppStatusApplyConfiguration represents a declarative configuration of the AppStatus type for use
 // with apply.
 type AppStatusApplyConfiguration struct {
-	Phase      *camelv1alpha1.AppPhase          `json:"phase,omitempty"`
-	Image      *string                          `json:"image,omitempty"`
-	Pods       []PodInfoApplyConfiguration      `json:"pods,omitempty"`
-	Replicas   *int32                           `json:"replicas,omitempty"`
-	Info       *string                          `json:"info,omitempty"`
-	Conditions []v1.ConditionApplyConfiguration `json:"conditions,omitempty"`
+	Phase       *camelv1alpha1.AppPhase                   `json:"phase,omitempty"`
+	Image       *string                                   `json:"image,omitempty"`
+	Pods        []PodInfoApplyConfiguration               `json:"pods,omitempty"`
+	Replicas    *int32                                    `json:"replicas,omitempty"`
+	Info        *string                                   `json:"info,omitempty"`
+	SuccessRate *SLIExchangeSuccessRateApplyConfiguration `json:"sliExchangeSuccessRate,omitempty"`
+	Conditions  []v1.ConditionApplyConfiguration          `json:"conditions,omitempty"`
 }
 
 // AppStatusApplyConfiguration constructs a declarative configuration of the AppStatus type for use with
@@ -83,6 +84,14 @@ func (b *AppStatusApplyConfiguration) WithReplicas(value int32) *AppStatusApplyC
 // If called multiple times, the Info field is set to the value of the last call.
 func (b *AppStatusApplyConfiguration) WithInfo(value string) *AppStatusApplyConfiguration {
 	b.Info = &value
+	return b
+}
+
+// WithSuccessRate sets the SuccessRate field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the SuccessRate field is set to the value of the last call.
+func (b *AppStatusApplyConfiguration) WithSuccessRate(value *SLIExchangeSuccessRateApplyConfiguration) *AppStatusApplyConfiguration {
+	b.SuccessRate = value
 	return b
 }
 

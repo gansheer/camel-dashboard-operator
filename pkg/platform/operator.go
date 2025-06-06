@@ -34,7 +34,7 @@ const (
 	CamelAppLabelSelector             = "LABEL_SELECTOR"
 	CamelAppPollIntervalSeconds       = "POLL_INTERVAL_SECONDS"
 
-	defaultPollingIntervalSeconds = 60
+	DefaultPollingIntervalSeconds = 60
 )
 
 const OperatorLockName = "camel-dashboard-lock"
@@ -89,7 +89,7 @@ func getPollingIntervalSeconds() int {
 			log.Error(err, "could not properly parse polling interval, fallback to default value")
 		}
 	}
-	return defaultPollingIntervalSeconds
+	return DefaultPollingIntervalSeconds
 }
 
 // GetPollingInterval returns the polling interval for the operator. It fallbacks to default value.
