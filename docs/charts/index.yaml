@@ -3,9 +3,9 @@ entries:
   camel-dashboard:
   - apiVersion: v2
     appVersion: 0.0.1-SNAPSHOT
-    created: "2025-05-28T12:42:36.386979978+02:00"
+    created: "2025-06-12T16:11:02.433804682+02:00"
     description: TODO
-    digest: 14b0e897f6ec1e1578397ce6a547adddefb54419c5907fac884aa0bb18877fea
+    digest: cf5728dd75f8fcdbafc82de1c9d023e5ea40a9b3493a32b2ff2e584d2ad053c4
     home: https://camel.apache.org/camel/latest/
     icon: https://github.com/apache/camel/raw/main/docs/img/logo64-d.png
     keywords:
@@ -20,6 +20,6 @@ entries:
     - https://github.com/camel-tooling/camel-dashboard-operator
     type: application
     urls:
-    - https://apache.github.io/camel-dashboard/charts/camel-dashboard-0.0.1-SNAPSHOT.tgz
+    - https://camel-tooling.github.io/camel-dashboard-charts/camel-dashboard-0.0.1-SNAPSHOT.tgz
     version: 0.0.1-SNAPSHOT
-generated: "2025-05-28T12:42:36.386443099+02:00"
+generated: "2025-06-12T16:11:02.433485124+02:00"
