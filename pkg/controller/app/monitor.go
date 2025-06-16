@@ -171,11 +171,13 @@ func getInfo(pods []v1alpha1.PodInfo) *v1alpha1.RuntimeInfo {
 }
 
 func formatRuntimeInfo(runtimeInfo *v1alpha1.RuntimeInfo) string {
-	return fmt.Sprintf(
-		"%s - %s (%s) [exchanges: total %d, succeeded %d, failed %d, pending %d]",
-		runtimeInfo.RuntimeProvider, runtimeInfo.RuntimeVersion, runtimeInfo.CamelVersion,
-		runtimeInfo.Exchange.Total, runtimeInfo.Exchange.Succeeded, runtimeInfo.Exchange.Failed, runtimeInfo.Exchange.Pending,
-	)
+	if runtimeInfo.RuntimeProvider != "" {
+		return fmt.Sprintf(
+			"%s - %s (%s)",
+			runtimeInfo.RuntimeProvider, runtimeInfo.RuntimeVersion, runtimeInfo.CamelVersion,
+		)
+	}
+	return ""
 }
 
 func getSLIExchangeSuccessRate(app, target v1alpha1.RuntimeInfo, pollingInteval *time.Duration) *v1alpha1.SLIExchangeSuccessRate {
