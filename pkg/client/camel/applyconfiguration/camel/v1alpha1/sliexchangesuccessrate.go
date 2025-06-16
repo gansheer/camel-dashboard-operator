@@ -21,6 +21,8 @@ package v1alpha1
 
 import (
 	time "time"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // SLIExchangeSuccessRateApplyConfiguration represents a declarative configuration of the SLIExchangeSuccessRate type for use
@@ -30,6 +32,7 @@ type SLIExchangeSuccessRateApplyConfiguration struct {
 	SamplingIntervalDuration *time.Duration `json:"samplingInterval,omitempty"`
 	SamplingIntervalTotal    *int           `json:"samplingIntervalTotal,omitempty"`
 	SamplingIntervalFailed   *int           `json:"samplingIntervalFailed,omitempty"`
+	LastTimestamp            *v1.Time       `json:"lastTimestamp,omitempty"`
 	Status                   *string        `json:"status,omitempty"`
 }
 
@@ -68,6 +71,14 @@ func (b *SLIExchangeSuccessRateApplyConfiguration) WithSamplingIntervalTotal(val
 // If called multiple times, the SamplingIntervalFailed field is set to the value of the last call.
 func (b *SLIExchangeSuccessRateApplyConfiguration) WithSamplingIntervalFailed(value int) *SLIExchangeSuccessRateApplyConfiguration {
 	b.SamplingIntervalFailed = &value
+	return b
+}
+
+// WithLastTimestamp sets the LastTimestamp field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LastTimestamp field is set to the value of the last call.
+func (b *SLIExchangeSuccessRateApplyConfiguration) WithLastTimestamp(value v1.Time) *SLIExchangeSuccessRateApplyConfiguration {
+	b.LastTimestamp = &value
 	return b
 }
 

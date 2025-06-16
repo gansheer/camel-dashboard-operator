@@ -152,6 +152,13 @@ func getInfo(pods []v1alpha1.PodInfo) *v1alpha1.RuntimeInfo {
 			runtimeInfo.Exchange.Failed += pod.Runtime.Exchange.Failed
 			runtimeInfo.Exchange.Pending += pod.Runtime.Exchange.Pending
 			runtimeInfo.Exchange.Succeeded += pod.Runtime.Exchange.Succeeded
+
+			// Set the major timestamp
+			if pod.Runtime.Exchange.LastTimestamp != nil {
+				if runtimeInfo.Exchange.LastTimestamp == nil || pod.Runtime.Exchange.LastTimestamp.After(runtimeInfo.Exchange.LastTimestamp.Time) {
+					runtimeInfo.Exchange.LastTimestamp = pod.Runtime.Exchange.LastTimestamp
+				}
+			}
 		}
 	}
 
@@ -191,6 +198,10 @@ func getSLIExchangeSuccessRate(app, target v1alpha1.RuntimeInfo, pollingInteval 
 		sliExchangeSuccessRate.Status = "Warning"
 	} else {
 		sliExchangeSuccessRate.Status = "OK"
+	}
+
+	if target.Exchange.LastTimestamp != nil {
+		sliExchangeSuccessRate.LastTimestamp = target.Exchange.LastTimestamp
 	}
 
 	return &sliExchangeSuccessRate

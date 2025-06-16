@@ -40,6 +40,10 @@ spec:
       jsonPath: .status.phase
       name: Phase
       type: string
+    - description: Last exchange age
+      jsonPath: .status.sliExchangeSuccessRate.lastTimestamp
+      name: Last Exchange
+      type: date
     - description: The success rate SLI
       jsonPath: .status.sliExchangeSuccessRate.status
       name: Exchange SLI
@@ -193,6 +197,10 @@ spec:
                             failed:
                               description: The total number of exchanges failed
                               type: integer
+                            lastTimestamp:
+                              description: the last message timestamp
+                              format: date-time
+                              type: string
                             pending:
                               description: The total number of exchanges pending (in
                                 Camel jargon, inflight exchanges)
@@ -217,10 +225,10 @@ spec:
                     status:
                       description: the Pod status
                       type: string
-                    uptime:
-                      description: the Pod updtime
-                      format: int64
-                      type: integer
+                    uptimeTimestamp:
+                      description: the Pod updtime timestamp
+                      format: date-time
+                      type: string
                   type: object
                 type: array
               replicas:
@@ -230,6 +238,10 @@ spec:
               sliExchangeSuccessRate:
                 description: The percentage of success rate
                 properties:
+                  lastTimestamp:
+                    description: the last message timestamp
+                    format: date-time
+                    type: string
                   samplingInterval:
                     description: the interval time considered
                     format: int64
