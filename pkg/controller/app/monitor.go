@@ -82,7 +82,7 @@ func (action *monitorAction) Handle(ctx context.Context, app *v1alpha1.App) (*v1
 		targetApp.Status.Info = formatRuntimeInfo(targetRuntimeInfo)
 	}
 	appRuntimeInfo := getInfo(app.Status.Pods)
-	if appRuntimeInfo != nil {
+	if appRuntimeInfo != nil && targetRuntimeInfo != nil {
 		pollingInterval := getPollingInterval(targetApp)
 		targetApp.Status.SuccessRate = getSLIExchangeSuccessRate(*appRuntimeInfo, *targetRuntimeInfo, &pollingInterval)
 	}
