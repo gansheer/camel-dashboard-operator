@@ -107,8 +107,7 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 
 		// Check the services only if the Pod is ready
 		if ready := kubernetes.GetPodCondition(pod, corev1.PodReady); ready != nil && ready.Status == corev1.ConditionTrue {
-			uptime := time.Since(ready.LastTransitionTime.Time)
-			podInfo.Uptime = &uptime
+			podInfo.UptimeTimestamp = &metav1.Time{Time: ready.LastTransitionTime.Time}
 			ready := true
 			podInfo.ObservabilityService = &v1alpha1.ObservabilityServiceInfo{}
 			if err := setHealth(&podInfo, podIp); err != nil {
@@ -161,17 +160,20 @@ func setMetrics(podInfo *v1alpha1.PodInfo, podIp string) error {
 		if metric, ok := metrics["app_info"]; ok {
 			populateRuntimeInfo(metric, "app_info", podInfo)
 		}
+		if metric, ok := metrics["camel_exchanges_last_timestamp"]; ok {
+			populateExchangesLastTimestamp(metric, "camel_exchanges_last_timestamp", podInfo)
+		}
 		if metric, ok := metrics["camel_exchanges_total"]; ok {
-			populateRuntimeExchangeTotal(metric, "camel_exchanges_total", podInfo)
+			populateExchangesTotal(metric, "camel_exchanges_total", podInfo)
 		}
 		if metric, ok := metrics["camel_exchanges_failed_total"]; ok {
-			populateRuntimeExchangeFailedTotal(metric, "camel_exchanges_failed_total", podInfo)
+			populateExchangesFailedTotal(metric, "camel_exchanges_failed_total", podInfo)
 		}
 		if metric, ok := metrics["camel_exchanges_succeeded_total"]; ok {
-			populateRuntimeExchangeSucceededTotal(metric, "camel_exchanges_succeeded_total", podInfo)
+			populateExchangesSucceededTotal(metric, "camel_exchanges_succeeded_total", podInfo)
 		}
 		if metric, ok := metrics["camel_exchanges_inflight"]; ok {
-			populateRuntimeExchangeInflight(metric, "camel_exchanges_inflight", podInfo)
+			populateExchangesInflight(metric, "camel_exchanges_inflight", podInfo)
 		}
 
 		return nil
@@ -208,7 +210,7 @@ func populateRuntimeInfo(metric *dto.MetricFamily, metricName string, podInfo *v
 	}
 }
 
-func populateRuntimeExchangeTotal(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
+func populateExchangesTotal(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
 	if len(metric.GetMetric()) == 0 {
 		log.Infof("WARN: expected at least 1 %s metric, got %d", metricName, len(metric.GetMetric()))
 		return
@@ -221,7 +223,7 @@ func populateRuntimeExchangeTotal(metric *dto.MetricFamily, metricName string, p
 	podInfo.Runtime.Exchange.Total = int(ptr.Deref(metric.GetMetric()[0].GetCounter().Value, 0))
 }
 
-func populateRuntimeExchangeFailedTotal(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
+func populateExchangesFailedTotal(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
 	if len(metric.GetMetric()) == 0 {
 		log.Infof("WARN: expected at least 1 %s metric, got %d", metricName, len(metric.GetMetric()))
 		return
@@ -234,9 +236,9 @@ func populateRuntimeExchangeFailedTotal(metric *dto.MetricFamily, metricName str
 	podInfo.Runtime.Exchange.Failed = int(ptr.Deref(metric.GetMetric()[0].GetCounter().Value, 0))
 }
 
-func populateRuntimeExchangeSucceededTotal(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
+func populateExchangesSucceededTotal(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
 	if len(metric.GetMetric()) == 0 {
-		log.Infof("WARN: expected at least 1 exchange_succeeded_total metric, got %d", len(metric.GetMetric()))
+		log.Infof("WARN: expected at least 1 %s metric, got %d", metricName, len(metric.GetMetric()))
 		return
 	}
 	if metric.GetMetric()[0].GetCounter() == nil {
@@ -247,9 +249,9 @@ func populateRuntimeExchangeSucceededTotal(metric *dto.MetricFamily, metricName 
 	podInfo.Runtime.Exchange.Succeeded = int(ptr.Deref(metric.GetMetric()[0].GetCounter().Value, 0))
 }
 
-func populateRuntimeExchangeInflight(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
+func populateExchangesInflight(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
 	if len(metric.GetMetric()) == 0 {
-		log.Infof("WARN: expected at least 1 exchange_inflight metric, got %d", len(metric.GetMetric()))
+		log.Infof("WARN: expected at least 1 %s metric, got %d", metricName, len(metric.GetMetric()))
 		return
 	}
 	if metric.GetMetric()[0].GetGauge() == nil {
@@ -258,6 +260,24 @@ func populateRuntimeExchangeInflight(metric *dto.MetricFamily, metricName string
 	}
 
 	podInfo.Runtime.Exchange.Pending = int(ptr.Deref(metric.GetMetric()[0].GetGauge().Value, 0))
+}
+
+func populateExchangesLastTimestamp(metric *dto.MetricFamily, metricName string, podInfo *v1alpha1.PodInfo) {
+	if len(metric.GetMetric()) == 0 {
+		log.Debugf("expected at least 1 exchanges_last_timestamp metric, got %d", len(metric.GetMetric()))
+		return
+	}
+	if metric.GetMetric()[0].GetGauge() == nil {
+		log.Debugf("expected %s metric to be a gauge", metricName)
+		return
+	}
+
+	lastExchangeTimestamp := int64(ptr.Deref(metric.GetMetric()[0].GetGauge().Value, 0))
+	if lastExchangeTimestamp == 0 {
+		return
+	}
+	timeUnixMilli := time.UnixMilli(lastExchangeTimestamp)
+	podInfo.Runtime.Exchange.LastTimestamp = &metav1.Time{Time: timeUnixMilli}
 }
 
 func setHealth(podInfo *v1alpha1.PodInfo, podIp string) error {

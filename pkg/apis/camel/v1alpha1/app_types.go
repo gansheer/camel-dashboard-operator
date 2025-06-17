@@ -35,6 +35,7 @@ const (
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:path=apps,scope=Namespaced,shortName=capp,categories=camel
 // +kubebuilder:printcolumn:name="Phase",type=string,JSONPath=`.status.phase`,description="The Camel App phase"
+// +kubebuilder:printcolumn:name="Last Exchange",type=date,JSONPath=`.status.sliExchangeSuccessRate.lastTimestamp`,description="Last exchange age"
 // +kubebuilder:printcolumn:name="Exchange SLI",type=string,JSONPath=`.status.sliExchangeSuccessRate.status`,description="The success rate SLI"
 // +kubebuilder:printcolumn:name="Image",type=string,JSONPath=`.status.image`,description="The Camel App image"
 // +kubebuilder:printcolumn:name="Replicas",type=string,JSONPath=`.status.replicas`,description="The Camel App Pods"
@@ -102,8 +103,8 @@ type PodInfo struct {
 	InternalIP string `json:"internalIp,omitempty"`
 	// the Pod status
 	Status string `json:"status,omitempty"`
-	// the Pod updtime
-	Uptime *time.Duration `json:"uptime,omitempty"`
+	// the Pod updtime timestamp
+	UptimeTimestamp *metav1.Time `json:"uptimeTimestamp,omitempty"`
 	// the Pod readiness
 	Ready bool `json:"ready,omitempty"`
 	// Observability services information
@@ -148,6 +149,8 @@ type ExchangeInfo struct {
 	Failed int `json:"failed,omitempty"`
 	// The total number of exchanges pending (in Camel jargon, inflight exchanges)
 	Pending int `json:"pending,omitempty"`
+	// the last message timestamp
+	LastTimestamp *metav1.Time `json:"lastTimestamp,omitempty"`
 }
 
 // SLIExchangeSuccessRate contains the information related to the SLI.
@@ -160,6 +163,8 @@ type SLIExchangeSuccessRate struct {
 	SamplingIntervalTotal int `json:"samplingIntervalTotal,omitempty"`
 	// the failed exchanges in the interval time considered
 	SamplingIntervalFailed int `json:"samplingIntervalFailed,omitempty"`
+	// the last message timestamp
+	LastTimestamp *metav1.Time `json:"lastTimestamp,omitempty"`
 	// a human readable status information
 	Status string `json:"status,omitempty"`
 }

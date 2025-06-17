@@ -19,13 +19,18 @@ limitations under the License.
 
 package v1alpha1
 
+import (
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 // ExchangeInfoApplyConfiguration represents a declarative configuration of the ExchangeInfo type for use
 // with apply.
 type ExchangeInfoApplyConfiguration struct {
-	Total     *int `json:"total,omitempty"`
-	Succeeded *int `json:"succeed,omitempty"`
-	Failed    *int `json:"failed,omitempty"`
-	Pending   *int `json:"pending,omitempty"`
+	Total         *int     `json:"total,omitempty"`
+	Succeeded     *int     `json:"succeed,omitempty"`
+	Failed        *int     `json:"failed,omitempty"`
+	Pending       *int     `json:"pending,omitempty"`
+	LastTimestamp *v1.Time `json:"lastTimestamp,omitempty"`
 }
 
 // ExchangeInfoApplyConfiguration constructs a declarative configuration of the ExchangeInfo type for use with
@@ -63,5 +68,13 @@ func (b *ExchangeInfoApplyConfiguration) WithFailed(value int) *ExchangeInfoAppl
 // If called multiple times, the Pending field is set to the value of the last call.
 func (b *ExchangeInfoApplyConfiguration) WithPending(value int) *ExchangeInfoApplyConfiguration {
 	b.Pending = &value
+	return b
+}
+
+// WithLastTimestamp sets the LastTimestamp field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the LastTimestamp field is set to the value of the last call.
+func (b *ExchangeInfoApplyConfiguration) WithLastTimestamp(value v1.Time) *ExchangeInfoApplyConfiguration {
+	b.LastTimestamp = &value
 	return b
 }

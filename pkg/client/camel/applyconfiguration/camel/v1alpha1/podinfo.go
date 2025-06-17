@@ -20,7 +20,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	time "time"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // PodInfoApplyConfiguration represents a declarative configuration of the PodInfo type for use
@@ -29,7 +29,7 @@ type PodInfoApplyConfiguration struct {
 	Name                 *string                                     `json:"name,omitempty"`
 	InternalIP           *string                                     `json:"internalIp,omitempty"`
 	Status               *string                                     `json:"status,omitempty"`
-	Uptime               *time.Duration                              `json:"uptime,omitempty"`
+	UptimeTimestamp      *v1.Time                                    `json:"uptimeTimestamp,omitempty"`
 	Ready                *bool                                       `json:"ready,omitempty"`
 	ObservabilityService *ObservabilityServiceInfoApplyConfiguration `json:"observe,omitempty"`
 	Runtime              *RuntimeInfoApplyConfiguration              `json:"runtime,omitempty"`
@@ -65,11 +65,11 @@ func (b *PodInfoApplyConfiguration) WithStatus(value string) *PodInfoApplyConfig
 	return b
 }
 
-// WithUptime sets the Uptime field in the declarative configuration to the given value
+// WithUptimeTimestamp sets the UptimeTimestamp field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
-// If called multiple times, the Uptime field is set to the value of the last call.
-func (b *PodInfoApplyConfiguration) WithUptime(value time.Duration) *PodInfoApplyConfiguration {
-	b.Uptime = &value
+// If called multiple times, the UptimeTimestamp field is set to the value of the last call.
+func (b *PodInfoApplyConfiguration) WithUptimeTimestamp(value v1.Time) *PodInfoApplyConfiguration {
+	b.UptimeTimestamp = &value
 	return b
 }
 
