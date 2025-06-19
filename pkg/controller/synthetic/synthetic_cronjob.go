@@ -72,3 +72,8 @@ func (app *nonManagedCamelCronjob) GetAppImage() string {
 func (app *nonManagedCamelCronjob) GetPods(ctx context.Context, c client.Client) ([]v1alpha1.PodInfo, error) {
 	return nil, nil
 }
+
+// GetAnnotations returns the backing deployment object annotations.
+func (app *nonManagedCamelCronjob) GetAnnotations() map[string]string {
+	return app.cron.Annotations
+}

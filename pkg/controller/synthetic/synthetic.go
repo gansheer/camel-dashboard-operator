@@ -41,12 +41,6 @@ var (
 	controller = true
 )
 
-const (
-	observabilityPortDefault    int = 8080
-	observabilityMetricsDefault     = "observe/metrics"
-	observabilityHealthDefault      = "observe/health"
-)
-
 // ManageSyntheticCamelApps is the controller for synthetic Camel Applications. Consider that the lifecycle of the objects are driven
 // by the way we are monitoring them. Since we're filtering by some label in the cached client, you must consider an add, update or delete
 // accordingly, ie, when the user label the resource, then it is considered as an add, when it removes the label, it is considered as a delete.
@@ -172,6 +166,8 @@ type NonManagedCamelApplicationAdapter interface {
 	GetReplicas() *int32
 	// GetPods returns the actual Pods backing the Camel application.
 	GetPods(ctx context.Context, c client.Client) ([]v1alpha1.PodInfo, error)
+	// GetAnnotations returns the backing deployment object annotations.
+	GetAnnotations() map[string]string
 }
 
 func NonManagedCamelApplicationFactory(obj ctrl.Object) (NonManagedCamelApplicationAdapter, error) {

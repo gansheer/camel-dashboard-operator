@@ -92,13 +92,23 @@ func (action *monitorAction) Handle(ctx context.Context, app *v1alpha1.App) (*v1
 		message = fmt.Sprintf("%d out of %d pods available", len(pods), int(*app.Status.Replicas))
 	}
 
-	targetApp.Status.AddCondition(metav1.Condition{
-		Type:               "Monitored",
-		Status:             metav1.ConditionTrue,
-		LastTransitionTime: metav1.NewTime(time.Now()),
-		Reason:             "MonitoringComplete",
-		Message:            message,
-	})
+	if allPodsReady(pods) {
+		targetApp.Status.AddCondition(metav1.Condition{
+			Type:               "Monitored",
+			Status:             metav1.ConditionTrue,
+			LastTransitionTime: metav1.NewTime(time.Now()),
+			Reason:             "MonitoringComplete",
+			Message:            message,
+		})
+	} else {
+		targetApp.Status.AddCondition(metav1.Condition{
+			Type:               "Monitored",
+			Status:             metav1.ConditionFalse,
+			LastTransitionTime: metav1.NewTime(time.Now()),
+			Reason:             "MonitoringComplete",
+			Message:            "Some pod is not ready. See specific pods statuses messages.",
+		})
+	}
 
 	return targetApp, nil
 }
@@ -168,6 +178,16 @@ func getInfo(pods []v1alpha1.PodInfo) *v1alpha1.RuntimeInfo {
 	}
 
 	return &runtimeInfo
+}
+
+func allPodsReady(pods []v1alpha1.PodInfo) bool {
+	for _, pod := range pods {
+		if !pod.Ready {
+			return false
+		}
+	}
+
+	return true
 }
 
 func formatRuntimeInfo(runtimeInfo *v1alpha1.RuntimeInfo) string {

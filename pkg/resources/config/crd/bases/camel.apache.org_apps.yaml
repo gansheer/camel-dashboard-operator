@@ -185,6 +185,9 @@ spec:
                     ready:
                       description: the Pod readiness
                       type: boolean
+                    reason:
+                      description: the Pod reason why it's not ready
+                      type: string
                     runtime:
                       description: Some information about the Camel runtime
                       properties:

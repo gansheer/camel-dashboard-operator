@@ -72,25 +72,25 @@ The application is immediately imported by the operator. Its metrics are also sc
 
 ```
 kubectl get apps
-NAME             PHASE     IMAGE                               REPLICAS   INFO
-camel-app-main   Running   docker.io/squakez/db-app-main:1.0   1          Main - 4.11.0 (4.11.0) [exchanges: total 973, succeeded 876, failed 97, pending 1]
+NAME                PHASE     LAST EXCHANGE   EXCHANGE SLI   IMAGE                                  REPLICAS   INFO
+camel-app-413       Running   8m32s           OK             squakez/cdb:4.13                       1          Main - 4.13.0-SNAPSHOT (4.13.0-SNAPSHOT)
 ```
 
 NOTE: more information are available inspecting the custom resource (i.e. via `-o yaml`).
 
-## Fine tune the metrics polling
+## Configure the metrics polling
 
 You can watch the metrics evolving as long as the application is running, for example via `-w` parameter:
 
 ```
 kubectl get apps -w
-NAME             PHASE     IMAGE                               REPLICAS   INFO
-camel-app-main   Running   docker.io/squakez/db-app-main:1.0   1          Main - 4.11.0 (4.11.0) [exchanges: total 1197, succeeded 1078, failed 119, pending 1]
-camel-app-sb     Running   docker.io/squakez/db-app-sb:1.0     1          Spring-Boot - 3.4.3 (4.11.0) [exchanges: total 20, succeeded 18, failed 2, pending 1]
-camel-app-sb     Running   docker.io/squakez/db-app-sb:1.0     1          Spring-Boot - 3.4.3 (4.11.0) [exchanges: total 32, succeeded 28, failed 4, pending 1]
-camel-app-main   Running   docker.io/squakez/db-app-main:1.0   1          Main - 4.11.0 (4.11.0) [exchanges: total 1207, succeeded 1086, failed 121, pending 1]
-camel-app-sb     Running   docker.io/squakez/db-app-sb:1.0     1          Spring-Boot - 3.4.3 (4.11.0) [exchanges: total 44, succeeded 36, failed 8, pending 1]
-camel-app-main   Running   docker.io/squakez/db-app-main:1.0   1          Main - 4.11.0 (4.11.0) [exchanges: total 1218, succeeded 1097, failed 121, pending 1]
+
+NAME                PHASE     LAST EXCHANGE   EXCHANGE SLI   IMAGE                                  REPLICAS   INFO
+...
+camel-app-413       Running   8m32s           OK             squakez/cdb:4.13                       1          Main - 4.13.0-SNAPSHOT (4.13.0-SNAPSHOT)
+camel-app-main      Running                   OK             docker.io/squakez/db-app-main:1.0      1          Main - 4.11.0 (4.11.0)
+camel-app-quarkus   Running                   Warning        docker.io/squakez/db-app-quarkus:1.0   1
+camel-app-sb        Running                   Error          docker.io/squakez/db-app-sb:1.0        1          Spring-Boot - 3.4.3 (4.11.0)
 ```
 
 The `App` are polled every minute by default. It should be enough in most cases, as the project is really a dashboard and not a proper monitoring tool. However, you can change this configuration if you want a more or less reactive polling. You can configure this value both at operator level (which would affect all the applications) or at single application level.
@@ -106,6 +106,18 @@ NOTE: this will affect all your applications. Setting it a low value can reduce 
 You can add an annotation to the `App` resource, `camel.apache.org/polling-interval-seconds` with the value you want.
 
 NOTE: although this configuration will only affect the single application, consider the right balance to avoid affecting the application performances.
+
+## Configure the observability services port
+
+The operator is able to discover applications thanks to the presence of the `camel-observability-services` component. By default this component exposes the metrics on port `9876` (which is also the operator default if you don't configure it). However this value can be changed by the user to any other port (including the regular business service port). You can configure is both at Operator or Application level.
+
+### Operator level
+
+You can setup the environment variables `OBSERVABILITY_PORT` with the number of the port where the operator has to get the metrics.
+
+### Application level
+
+You can add an annotation to the `App` resource, `camel.apache.org/observability-services-port` with the value expected for that specific `App` only.
 
 ## Openshift plugin
 

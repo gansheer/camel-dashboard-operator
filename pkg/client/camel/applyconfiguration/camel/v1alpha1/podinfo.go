@@ -31,6 +31,7 @@ type PodInfoApplyConfiguration struct {
 	Status               *string                                     `json:"status,omitempty"`
 	UptimeTimestamp      *v1.Time                                    `json:"uptimeTimestamp,omitempty"`
 	Ready                *bool                                       `json:"ready,omitempty"`
+	Reason               *string                                     `json:"reason,omitempty"`
 	ObservabilityService *ObservabilityServiceInfoApplyConfiguration `json:"observe,omitempty"`
 	Runtime              *RuntimeInfoApplyConfiguration              `json:"runtime,omitempty"`
 }
@@ -78,6 +79,14 @@ func (b *PodInfoApplyConfiguration) WithUptimeTimestamp(value v1.Time) *PodInfoA
 // If called multiple times, the Ready field is set to the value of the last call.
 func (b *PodInfoApplyConfiguration) WithReady(value bool) *PodInfoApplyConfiguration {
 	b.Ready = &value
+	return b
+}
+
+// WithReason sets the Reason field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Reason field is set to the value of the last call.
+func (b *PodInfoApplyConfiguration) WithReason(value string) *PodInfoApplyConfiguration {
+	b.Reason = &value
 	return b
 }
 
