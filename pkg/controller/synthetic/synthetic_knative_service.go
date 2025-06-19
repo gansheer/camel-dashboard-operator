@@ -72,3 +72,8 @@ func (app *nonManagedCamelKnativeService) GetAppImage() string {
 func (app *nonManagedCamelKnativeService) GetPods(ctx context.Context, c client.Client) ([]v1alpha1.PodInfo, error) {
 	return nil, nil
 }
+
+// GetAnnotations returns the backing deployment object annotations.
+func (app *nonManagedCamelKnativeService) GetAnnotations() map[string]string {
+	return app.ksvc.Annotations
+}

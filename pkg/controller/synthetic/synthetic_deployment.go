@@ -24,10 +24,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/client"
+	"github.com/camel-tooling/camel-dashboard-operator/pkg/platform"
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/kubernetes"
 	"github.com/camel-tooling/camel-dashboard-operator/pkg/util/log"
 	appsv1 "k8s.io/api/apps/v1"
@@ -86,6 +88,11 @@ func (app *nonManagedCamelDeployment) GetReplicas() *int32 {
 	return app.deploy.Spec.Replicas
 }
 
+// GetAnnotations returns the backing deployment object annotations.
+func (app *nonManagedCamelDeployment) GetAnnotations() map[string]string {
+	return app.deploy.Annotations
+}
+
 // GetPods returns the pods backing the Camel application.
 func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Client) ([]v1alpha1.PodInfo, error) {
 	var podsInfo []v1alpha1.PodInfo
@@ -97,6 +104,7 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 	if err != nil {
 		return nil, err
 	}
+	observabilityPort := app.getObservabilityPort()
 	for _, pod := range pods.Items {
 		podIp := pod.Status.PodIP
 		podInfo := v1alpha1.PodInfo{
@@ -110,13 +118,20 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 			podInfo.UptimeTimestamp = &metav1.Time{Time: ready.LastTransitionTime.Time}
 			ready := true
 			podInfo.ObservabilityService = &v1alpha1.ObservabilityServiceInfo{}
-			if err := setHealth(&podInfo, podIp); err != nil {
+			if err := setHealth(&podInfo, podIp, observabilityPort); err != nil {
 				ready = false
-				log.Errorf(err, "Could not scrape health endpoint")
+				reason := fmt.Sprintf("Could not scrape health endpoint: %s", err.Error())
+				log.Infof("Deployment %s/%s: %s", app.deploy.GetNamespace(), app.deploy.GetName(), reason)
+				podInfo.Reason = reason
 			}
-			if err := setMetrics(&podInfo, podIp); err != nil {
+			if err := setMetrics(&podInfo, podIp, observabilityPort); err != nil {
 				ready = false
-				log.Errorf(err, "Could not scrape metrics endpoint")
+				reason := fmt.Sprintf("Could not scrape metrics endpoint: %s", err.Error())
+				log.Infof("Deployment %s/%s: %s", app.deploy.GetNamespace(), app.deploy.GetName(), reason)
+				if podInfo.Reason != "" {
+					podInfo.Reason += ". "
+				}
+				podInfo.Reason += reason
 			}
 			podInfo.Ready = ready
 		}
@@ -127,10 +142,10 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 	return podsInfo, nil
 }
 
-func setMetrics(podInfo *v1alpha1.PodInfo, podIp string) error {
+func setMetrics(podInfo *v1alpha1.PodInfo, podIp string, port int) error {
 	// NOTE: we're not using a proxy as a design choice in order
 	// to have a faster turnaround.
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/%s", podIp, observabilityPortDefault, observabilityMetricsDefault), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/%s", podIp, port, platform.DefaultObservabilityMetrics), nil)
 	if err != nil {
 		return err
 	}
@@ -143,8 +158,8 @@ func setMetrics(podInfo *v1alpha1.PodInfo, podIp string) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
-		podInfo.ObservabilityService.MetricsEndpoint = observabilityMetricsDefault
-		podInfo.ObservabilityService.MetricsPort = observabilityPortDefault
+		podInfo.ObservabilityService.MetricsEndpoint = platform.DefaultObservabilityMetrics
+		podInfo.ObservabilityService.MetricsPort = port
 
 		if podInfo.Runtime == nil {
 			podInfo.Runtime = &v1alpha1.RuntimeInfo{}
@@ -280,17 +295,17 @@ func populateExchangesLastTimestamp(metric *dto.MetricFamily, metricName string,
 	podInfo.Runtime.Exchange.LastTimestamp = &metav1.Time{Time: timeUnixMilli}
 }
 
-func setHealth(podInfo *v1alpha1.PodInfo, podIp string) error {
+func setHealth(podInfo *v1alpha1.PodInfo, podIp string, port int) error {
 	// NOTE: we're not using a proxy as a design choice in order
 	// to have a faster turnaround.
-	resp, err := http.Get(fmt.Sprintf("http://%s:%d/%s", podIp, observabilityPortDefault, observabilityHealthDefault))
+	resp, err := http.Get(fmt.Sprintf("http://%s:%d/%s", podIp, port, platform.DefaultObservabilityHealth))
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
-		podInfo.ObservabilityService.HealthPort = observabilityPortDefault
-		podInfo.ObservabilityService.HealthEndpoint = observabilityHealthDefault
+		podInfo.ObservabilityService.HealthPort = port
+		podInfo.ObservabilityService.HealthEndpoint = platform.DefaultObservabilityHealth
 
 		status, err := parseHealthStatus(resp.Body)
 		if err != nil {
@@ -317,4 +332,21 @@ func parseHealthStatus(reader io.Reader) (string, error) {
 	}
 
 	return string(status), nil
+}
+
+func (app *nonManagedCamelDeployment) getObservabilityPort() int {
+	defaultPort := platform.GetObservabilityPort()
+	if app.GetAnnotations() == nil || app.GetAnnotations()[v1alpha1.AppObservabilityServicesPort] == "" {
+		return defaultPort
+	}
+
+	port, err := strconv.Atoi(app.GetAnnotations()[v1alpha1.AppObservabilityServicesPort])
+	if err == nil {
+		return port
+	} else {
+		log.Error(err, "could not properly parse application observability services port configuration, "+
+			"fallback to default operator value %d", defaultPort)
+	}
+
+	return defaultPort
 }

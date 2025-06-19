@@ -107,6 +107,8 @@ type PodInfo struct {
 	UptimeTimestamp *metav1.Time `json:"uptimeTimestamp,omitempty"`
 	// the Pod readiness
 	Ready bool `json:"ready,omitempty"`
+	// the Pod reason why it's not ready
+	Reason string `json:"reason,omitempty"`
 	// Observability services information
 	ObservabilityService *ObservabilityServiceInfo `json:"observe,omitempty"`
 	// Some information about the Camel runtime

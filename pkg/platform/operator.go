@@ -32,12 +32,17 @@ const (
 	OperatorWatchNamespaceEnvVariable = "WATCH_NAMESPACE"
 	operatorNamespaceEnvVariable      = "NAMESPACE"
 	CamelAppLabelSelector             = "LABEL_SELECTOR"
-	CamelAppPollIntervalSeconds       = "POLL_INTERVAL_SECONDS"
 
+	CamelAppPollIntervalSeconds   = "POLL_INTERVAL_SECONDS"
 	DefaultPollingIntervalSeconds = 60
-)
 
-const OperatorLockName = "camel-dashboard-lock"
+	CamelAppObservabilityPort       = "OBSERVABILITY_PORT"
+	defaultObservabilityPort    int = 9876
+	DefaultObservabilityMetrics     = "observe/metrics"
+	DefaultObservabilityHealth      = "observe/health"
+
+	OperatorLockName = "camel-dashboard-lock"
+)
 
 // IsCurrentOperatorGlobal returns true if the operator is configured to watch all namespaces.
 func IsCurrentOperatorGlobal() bool {
@@ -86,7 +91,8 @@ func getPollingIntervalSeconds() int {
 		if err == nil {
 			return interval
 		} else {
-			log.Error(err, "could not properly parse polling interval, fallback to default value")
+			log.Errorf(err, "could not properly parse Operator polling interval configuration, "+
+				"fallback to default value %d", DefaultPollingIntervalSeconds)
 		}
 	}
 	return DefaultPollingIntervalSeconds
@@ -95,4 +101,18 @@ func getPollingIntervalSeconds() int {
 // GetPollingInterval returns the polling interval for the operator. It fallbacks to default value.
 func GetPollingInterval() time.Duration {
 	return time.Duration(getPollingIntervalSeconds()) * time.Second
+}
+
+// GetObservabilityPort returns the observability por set for the operator. It fallbacks to default value.
+func GetObservabilityPort() int {
+	if observabilityPort, envSet := os.LookupEnv(CamelAppObservabilityPort); envSet && observabilityPort != "" {
+		observabilityPortInt, err := strconv.Atoi(observabilityPort)
+		if err == nil {
+			return observabilityPortInt
+		} else {
+			log.Error(err, "could not properly parse Operator observability port configuration, "+
+				"fallback to default value %d", defaultObservabilityPort)
+		}
+	}
+	return defaultObservabilityPort
 }

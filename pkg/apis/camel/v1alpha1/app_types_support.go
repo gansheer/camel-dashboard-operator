@@ -32,6 +32,8 @@ const (
 	AppImportedNameLabel = "camel.apache.org/imported-from-name"
 	// AppPollingIntervalSecondsAnnotation is used to instruct a given application to poll interval.
 	AppPollingIntervalSecondsAnnotation = "camel.apache.org/polling-interval-seconds"
+	// AppObservabilityServicesPort is used to instruct an application to use a specific port for metrics scraping.
+	AppObservabilityServicesPort = "camel.apache.org/observability-services-port"
 )
 
 func NewApp(namespace string, name string) App {
