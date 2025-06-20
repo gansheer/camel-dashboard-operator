@@ -21,16 +21,13 @@ location=$(dirname "$0")
 
 cd $location/../
 
-cat ./script/headers/yaml.txt > ./helm/camel-dashboard/templates/rbacs-common.yaml
 cat ./script/headers/yaml.txt > ./helm/camel-dashboard/templates/rbacs-descoped.yaml
 cat ./script/headers/yaml.txt > ./helm/camel-dashboard/templates/rbacs-namespaced.yaml
 
-kustomize build ./pkg/resources/config/helm/common/. >> ./helm/camel-dashboard/templates/rbacs-common.yaml
-
-printf "{{- if eq .Values.operator.global \"false\" }}\n" >> ./helm/camel-dashboard/templates/rbacs-namespaced.yaml
+printf "{{- if not .Values.operator.global }}\n" >> ./helm/camel-dashboard/templates/rbacs-namespaced.yaml
 kustomize build ./pkg/resources/config/helm/namespaced/. >> ./helm/camel-dashboard/templates/rbacs-namespaced.yaml
 printf "{{- end }}\n" >> ./helm/camel-dashboard/templates/rbacs-namespaced.yaml
 
-printf "{{- if eq .Values.operator.global \"true\" }}\n" >> ./helm/camel-dashboard/templates/rbacs-descoped.yaml
+printf "{{- if .Values.operator.global }}\n" >> ./helm/camel-dashboard/templates/rbacs-descoped.yaml
 kustomize build ./pkg/resources/config/helm/descoped/. >> ./helm/camel-dashboard/templates/rbacs-descoped.yaml
 printf "{{- end }}\n" >> ./helm/camel-dashboard/templates/rbacs-descoped.yaml

@@ -45,7 +45,7 @@ spec:
             - operator
           env:
             - name: WATCH_NAMESPACE
-              {{- if eq .Values.operator.global "false" }}
+              {{- if not .Values.operator.global }}
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace

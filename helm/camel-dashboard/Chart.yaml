@@ -19,7 +19,7 @@ apiVersion: v2
 name: camel-dashboard
 description: TODO
 type: application
-version: 0.13.1
+version: 0.0.1
 appVersion: 0.0.1-SNAPSHOT
 # TODO: logo and official docs
 icon: https://github.com/apache/camel/raw/main/docs/img/logo64-d.png
