@@ -36,30 +36,33 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: The Camel App phase
-      jsonPath: .status.phase
-      name: Phase
-      type: string
-    - description: Last exchange age
-      jsonPath: .status.sliExchangeSuccessRate.lastTimestamp
-      name: Last Exchange
-      type: date
-    - description: The success rate SLI
-      jsonPath: .status.sliExchangeSuccessRate.status
-      name: Exchange SLI
-      type: string
     - description: The Camel App image
       jsonPath: .status.image
       name: Image
+      type: string
+    - description: The Camel App phase
+      jsonPath: .status.phase
+      name: Phase
       type: string
     - description: The Camel App Pods
       jsonPath: .status.replicas
       name: Replicas
       type: string
+    - jsonPath: .status.conditions[?(@.type=="Monitored")].status
+      name: Monitored
+      type: string
     - description: The Camel App info
       jsonPath: .status.info
       name: Info
       type: string
+    - description: The success rate SLI
+      jsonPath: .status.sliExchangeSuccessRate.status
+      name: Exchange SLI
+      type: string
+    - description: Last exchange age
+      jsonPath: .status.sliExchangeSuccessRate.lastTimestamp
+      name: Last Exchange
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
