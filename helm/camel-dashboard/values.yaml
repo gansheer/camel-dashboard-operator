@@ -20,7 +20,7 @@ fullnameOverride: ""
 
 operator:
   image: quay.io/camel-tooling/camel-dashboard-operator
-  global: "true"
+  global: true
   resources: {}
   securityContext: {}
   tolerations: []

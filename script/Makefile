@@ -608,10 +608,6 @@ clone-kustomize-dir:
 # the set-operator targets are mostly thought as an utility for the e2e which require certain operator settings
 set-operator-id:
 ifdef OPERATOR_ID
-	@echo "INFO: setting operator ID to $(OPERATOR_ID)"
-	@sed -i 's/name: .*/name: $(OPERATOR_ID)/' $(KUST_TMP)/install/overlays/platform/integration-platform.yaml
-	cd $(KUST_TMP)/install/overlays/platform/ && kustomize edit add annotation camel.apache.org/operator.id:$(OPERATOR_ID)
-	@sed -i 's/value: .*/value: $(OPERATOR_ID)/' $(KUST_TMP)/$(KUSTOMIZE_DIR)/patch-operator-id.yaml
 	@echo "INFO: adding a suffix for ClusterRoleBindings $(OPERATOR_ID)"
 	cd $(KUST_TMP)/install/base/config/rbac/descoped && kustomize edit set namesuffix -- -$(OPERATOR_ID)
 else
@@ -637,7 +633,6 @@ ifndef NAMESPACE
 	$(eval NAMESPACE=$(DEFAULT_NS))
 endif
 	cd $(KUST_TMP)/$(KUSTOMIZE_DIR) && kustomize edit set namespace $(NAMESPACE)
-	cd $(KUST_TMP)/install/overlays/platform && kustomize edit set namespace $(NAMESPACE)
 	kubectl apply -k $(KUST_TMP)/$(KUSTOMIZE_DIR) --server-side --force-conflicts
 
 install-k8s-global: DEFAULT_NS="camel-dashboard"

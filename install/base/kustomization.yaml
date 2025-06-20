@@ -19,5 +19,4 @@ kind: Kustomization
 
 resources:
 - ./config/crd
-- ./config/rbac
 - ./config/manager
