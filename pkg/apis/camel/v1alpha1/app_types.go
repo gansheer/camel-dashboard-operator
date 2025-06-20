@@ -93,6 +93,8 @@ const (
 	AppPhaseRunning AppPhase = "Running"
 	// AppPhaseError --.
 	AppPhaseError AppPhase = "Error"
+	// AppPhasePaused likely scaled to 0.
+	AppPhasePaused AppPhase = "Paused"
 )
 
 // PodInfo contains a set of information related to the Pod running the Camel application.

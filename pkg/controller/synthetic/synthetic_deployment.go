@@ -72,6 +72,9 @@ func (app *nonManagedCamelDeployment) CamelApp(ctx context.Context, c client.Cli
 // GetAppPhase returns the phase of the backing Camel application.
 func (app *nonManagedCamelDeployment) GetAppPhase() v1alpha1.AppPhase {
 	if app.deploy.Status.AvailableReplicas == app.deploy.Status.Replicas {
+		if app.deploy.Status.Replicas == 0 {
+			return v1alpha1.AppPhasePaused
+		}
 		return v1alpha1.AppPhaseRunning
 	}
 
