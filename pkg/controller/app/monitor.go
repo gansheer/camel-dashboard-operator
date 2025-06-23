@@ -84,7 +84,9 @@ func (action *monitorAction) Handle(ctx context.Context, app *v1alpha1.App) (*v1
 	appRuntimeInfo := getInfo(app.Status.Pods)
 	if appRuntimeInfo != nil && targetRuntimeInfo != nil {
 		pollingInterval := getPollingInterval(targetApp)
-		targetApp.Status.SuccessRate = getSLIExchangeSuccessRate(*appRuntimeInfo, *targetRuntimeInfo, &pollingInterval)
+		sliErrPerc := getSLIExchangeErrorThreshold(targetApp)
+		sliWarnPerc := getSLIExchangeWarningThreshold(targetApp)
+		targetApp.Status.SuccessRate = getSLIExchangeSuccessRate(*appRuntimeInfo, *targetRuntimeInfo, &pollingInterval, sliErrPerc, sliWarnPerc)
 	}
 
 	message := "Success"
@@ -92,7 +94,7 @@ func (action *monitorAction) Handle(ctx context.Context, app *v1alpha1.App) (*v1
 		message = fmt.Sprintf("%d out of %d pods available", len(pods), int(*app.Status.Replicas))
 	}
 
-	if allPodsReady(pods) {
+	if len(pods) > 0 && allPodsReady(pods) {
 		targetApp.Status.AddCondition(metav1.Condition{
 			Type:               "Monitored",
 			Status:             metav1.ConditionTrue,
@@ -200,7 +202,7 @@ func formatRuntimeInfo(runtimeInfo *v1alpha1.RuntimeInfo) string {
 	return ""
 }
 
-func getSLIExchangeSuccessRate(app, target v1alpha1.RuntimeInfo, pollingInteval *time.Duration) *v1alpha1.SLIExchangeSuccessRate {
+func getSLIExchangeSuccessRate(app, target v1alpha1.RuntimeInfo, pollingInteval *time.Duration, sliErrPerc, sliWarnPerc int) *v1alpha1.SLIExchangeSuccessRate {
 	var failureRate float64
 	sliExchangeSuccessRate := v1alpha1.SLIExchangeSuccessRate{
 		SamplingIntervalDuration: pollingInteval,
@@ -208,18 +210,21 @@ func getSLIExchangeSuccessRate(app, target v1alpha1.RuntimeInfo, pollingInteval 
 
 	totalLastInterval := target.Exchange.Total - app.Exchange.Total
 	failedLastInterval := target.Exchange.Failed - app.Exchange.Failed
-	failureRate = float64(failedLastInterval) / float64(totalLastInterval) * 100
-	successRate := 100 - failureRate
-	sliExchangeSuccessRate.SuccessPercentage = strconv.FormatFloat(successRate, 'f', 2, 64)
+	if totalLastInterval > 0 {
+		failureRate = float64(failedLastInterval) / float64(totalLastInterval) * 100
+		successRate := 100 - failureRate
+		sliExchangeSuccessRate.SuccessPercentage = strconv.FormatFloat(successRate, 'f', 2, 64)
+	}
 	sliExchangeSuccessRate.SamplingIntervalTotal = totalLastInterval
 	sliExchangeSuccessRate.SamplingIntervalFailed = failedLastInterval
 
-	if failureRate > 10 {
-		sliExchangeSuccessRate.Status = "Error"
-	} else if failureRate > 5 {
-		sliExchangeSuccessRate.Status = "Warning"
-	} else {
-		sliExchangeSuccessRate.Status = "OK"
+	if failureRate > float64(sliWarnPerc) {
+		sliExchangeSuccessRate.Status = v1alpha1.SLIExchangeStatusError
+	} else if failureRate > float64(sliErrPerc) {
+		sliExchangeSuccessRate.Status = v1alpha1.SLIExchangeStatusWarning
+	} else if totalLastInterval > 0 {
+		// We prevent to mark as success when there is no yet exchange
+		sliExchangeSuccessRate.Status = v1alpha1.SLIExchangeStatusSuccess
 	}
 
 	if target.Exchange.LastTimestamp != nil {

@@ -33,13 +33,16 @@ const (
 	operatorNamespaceEnvVariable      = "NAMESPACE"
 	CamelAppLabelSelector             = "LABEL_SELECTOR"
 
-	CamelAppPollIntervalSeconds   = "POLL_INTERVAL_SECONDS"
-	DefaultPollingIntervalSeconds = 60
-
-	CamelAppObservabilityPort       = "OBSERVABILITY_PORT"
-	defaultObservabilityPort    int = 9876
-	DefaultObservabilityMetrics     = "observe/metrics"
-	DefaultObservabilityHealth      = "observe/health"
+	CamelAppPollIntervalSeconds             = "POLL_INTERVAL_SECONDS"
+	DefaultPollingIntervalSeconds           = 60
+	SLIExchangeErrorPercentage              = "SLI_ERR_PERCENTAGE"
+	defaultSLIExchangeErrorPercentage       = 5
+	SLIExchangeWarningPercentage            = "SLI_WARN_PERCENTAGE"
+	defaultSLIExchangeWarningPercentage     = 10
+	CamelAppObservabilityPort               = "OBSERVABILITY_PORT"
+	defaultObservabilityPort            int = 9876
+	DefaultObservabilityMetrics             = "observe/metrics"
+	DefaultObservabilityHealth              = "observe/health"
 
 	OperatorLockName = "camel-dashboard-lock"
 )
@@ -84,18 +87,24 @@ func GetAppLabelSelector() string {
 	return v1alpha1.AppLabel
 }
 
-// getPollingIntervalSeconds returns the polling interval (in seconds) for the operator. It fallbacks to default value.
-func getPollingIntervalSeconds() int {
-	if pollingIntervalSeconds, envSet := os.LookupEnv(CamelAppPollIntervalSeconds); envSet && pollingIntervalSeconds != "" {
-		interval, err := strconv.Atoi(pollingIntervalSeconds)
+// getOperatorEnvAsInt returns a generic operator environment variable as an it. It fallbacks to default value if the env var is missing.
+func getOperatorEnvAsInt(envVar, envVarDescription string, defaultValue int) int {
+	if envVarVal, envSet := os.LookupEnv(envVar); envSet && envVarVal != "" {
+		v, err := strconv.Atoi(envVarVal)
 		if err == nil {
-			return interval
+			return v
 		} else {
-			log.Errorf(err, "could not properly parse Operator polling interval configuration, "+
-				"fallback to default value %d", DefaultPollingIntervalSeconds)
+			log.Errorf(err, "could not properly parse Operator %s, "+
+				"fallback to default value %d", envVarDescription, defaultValue)
 		}
 	}
-	return DefaultPollingIntervalSeconds
+
+	return defaultValue
+}
+
+// getPollingIntervalSeconds returns the polling interval (in seconds) for the operator. It fallbacks to default value.
+func getPollingIntervalSeconds() int {
+	return getOperatorEnvAsInt(CamelAppPollIntervalSeconds, "polling interval configuration", DefaultPollingIntervalSeconds)
 }
 
 // GetPollingInterval returns the polling interval for the operator. It fallbacks to default value.
@@ -103,16 +112,17 @@ func GetPollingInterval() time.Duration {
 	return time.Duration(getPollingIntervalSeconds()) * time.Second
 }
 
-// GetObservabilityPort returns the observability por set for the operator. It fallbacks to default value.
+// GetObservabilityPort returns the observability port set for the operator. It fallbacks to default value.
 func GetObservabilityPort() int {
-	if observabilityPort, envSet := os.LookupEnv(CamelAppObservabilityPort); envSet && observabilityPort != "" {
-		observabilityPortInt, err := strconv.Atoi(observabilityPort)
-		if err == nil {
-			return observabilityPortInt
-		} else {
-			log.Error(err, "could not properly parse Operator observability port configuration, "+
-				"fallback to default value %d", defaultObservabilityPort)
-		}
-	}
-	return defaultObservabilityPort
+	return getOperatorEnvAsInt(CamelAppObservabilityPort, "observability port configuration", defaultObservabilityPort)
+}
+
+// GetSLIExchangeErrorThreshold returns the SLI Exchange error threshold configuration. It fallbacks to default value.
+func GetSLIExchangeErrorThreshold() int {
+	return getOperatorEnvAsInt(SLIExchangeErrorPercentage, "SLI exchange error threshold", defaultSLIExchangeErrorPercentage)
+}
+
+// GetSLIExchangeWarnThreshold returns the SLI Exchange warning threshold configuration. It fallbacks to default value.
+func GetSLIExchangeWarningThreshold() int {
+	return getOperatorEnvAsInt(SLIExchangeWarningPercentage, "SLI exchange warning threshold", defaultSLIExchangeWarningPercentage)
 }

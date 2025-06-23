@@ -22,18 +22,19 @@ package v1alpha1
 import (
 	time "time"
 
+	camelv1alpha1 "github.com/camel-tooling/camel-dashboard-operator/pkg/apis/camel/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // SLIExchangeSuccessRateApplyConfiguration represents a declarative configuration of the SLIExchangeSuccessRate type for use
 // with apply.
 type SLIExchangeSuccessRateApplyConfiguration struct {
-	SuccessPercentage        *string        `json:"successPercentage,omitempty"`
-	SamplingIntervalDuration *time.Duration `json:"samplingInterval,omitempty"`
-	SamplingIntervalTotal    *int           `json:"samplingIntervalTotal,omitempty"`
-	SamplingIntervalFailed   *int           `json:"samplingIntervalFailed,omitempty"`
-	LastTimestamp            *v1.Time       `json:"lastTimestamp,omitempty"`
-	Status                   *string        `json:"status,omitempty"`
+	SuccessPercentage        *string                          `json:"successPercentage,omitempty"`
+	SamplingIntervalDuration *time.Duration                   `json:"samplingInterval,omitempty"`
+	SamplingIntervalTotal    *int                             `json:"samplingIntervalTotal,omitempty"`
+	SamplingIntervalFailed   *int                             `json:"samplingIntervalFailed,omitempty"`
+	LastTimestamp            *v1.Time                         `json:"lastTimestamp,omitempty"`
+	Status                   *camelv1alpha1.SLIExchangeStatus `json:"status,omitempty"`
 }
 
 // SLIExchangeSuccessRateApplyConfiguration constructs a declarative configuration of the SLIExchangeSuccessRate type for use with
@@ -85,7 +86,7 @@ func (b *SLIExchangeSuccessRateApplyConfiguration) WithLastTimestamp(value v1.Ti
 // WithStatus sets the Status field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Status field is set to the value of the last call.
-func (b *SLIExchangeSuccessRateApplyConfiguration) WithStatus(value string) *SLIExchangeSuccessRateApplyConfiguration {
+func (b *SLIExchangeSuccessRateApplyConfiguration) WithStatus(value camelv1alpha1.SLIExchangeStatus) *SLIExchangeSuccessRateApplyConfiguration {
 	b.Status = &value
 	return b
 }

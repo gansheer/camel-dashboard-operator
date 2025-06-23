@@ -34,6 +34,10 @@ const (
 	AppPollingIntervalSecondsAnnotation = "camel.apache.org/polling-interval-seconds"
 	// AppObservabilityServicesPort is used to instruct an application to use a specific port for metrics scraping.
 	AppObservabilityServicesPort = "camel.apache.org/observability-services-port"
+	// AppSLIExchangeErrorPercentageAnnotation is used to instruct a given application error percentage SLI Exchange.
+	AppSLIExchangeErrorPercentageAnnotation = "camel.apache.org/sli-exchange-error-percentage"
+	// AppSLIExchangeWarningPercentageAnnotation is used to instruct a given application warning percentage SLI Exchange.
+	AppSLIExchangeWarningPercentageAnnotation = "camel.apache.org/sli-exchange-warning-percentage"
 )
 
 func NewApp(namespace string, name string) App {

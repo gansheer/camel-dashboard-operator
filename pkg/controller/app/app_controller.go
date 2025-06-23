@@ -156,3 +156,35 @@ func getPollingInterval(target *v1alpha1.App) time.Duration {
 
 	return defaultPolling
 }
+
+func getSLIExchangeErrorThreshold(target *v1alpha1.App) int {
+	defaultValue := platform.GetSLIExchangeErrorThreshold()
+	if target.Annotations == nil || target.Annotations[v1alpha1.AppSLIExchangeErrorPercentageAnnotation] == "" {
+		return defaultValue
+	}
+
+	val, err := strconv.Atoi(target.Annotations[v1alpha1.AppSLIExchangeErrorPercentageAnnotation])
+	if err == nil {
+		return val
+	} else {
+		log.Error(err, "could not properly parse SLI error percentage, fallback to default operator value")
+	}
+
+	return defaultValue
+}
+
+func getSLIExchangeWarningThreshold(target *v1alpha1.App) int {
+	defaultValue := platform.GetSLIExchangeWarningThreshold()
+	if target.Annotations == nil || target.Annotations[v1alpha1.AppSLIExchangeWarningPercentageAnnotation] == "" {
+		return defaultValue
+	}
+
+	val, err := strconv.Atoi(target.Annotations[v1alpha1.AppSLIExchangeWarningPercentageAnnotation])
+	if err == nil {
+		return val
+	} else {
+		log.Error(err, "could not properly parse SLI warning percentage, fallback to default operator value")
+	}
+
+	return defaultValue
+}
