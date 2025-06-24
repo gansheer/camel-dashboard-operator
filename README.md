@@ -107,6 +107,18 @@ You can add an annotation to the `App` resource, `camel.apache.org/polling-inter
 
 NOTE: although this configuration will only affect the single application, consider the right balance to avoid affecting the application performances.
 
+## Configure the SLI Exchange error and warning percentage
+
+The operator is in charge to automatically calculate the success rate percentage of exchanges in the last polling interval time. It has some default configuration and will return a `Success`, `Warning` or `Error` status if it detects that the failure of exchanges during the interval exceeds the thresholds. It returns an `Error` when the failure exceed the 5% of exchanges failed, `Warning` if the failure is above 10%, `Success`. However, these values can be configured.
+
+### Operator level
+
+You can setup the environment variables `SLI_ERR_PERCENTAGE` and `SLI_WARN_PERCENTAGE`. It requires an `int` value.
+
+### Application level
+
+You can add an annotation to the `App` resource, `camel.apache.org/sli-exchange-error-percentage` and `camel.apache.org/sli-exchange-warning-percentage` with the value expected for that specific `App` only.
+
 ## Configure the observability services port
 
 The operator is able to discover applications thanks to the presence of the `camel-observability-services` component. By default this component exposes the metrics on port `9876` (which is also the operator default if you don't configure it). However this value can be changed by the user to any other port (including the regular business service port). You can configure is both at Operator or Application level.

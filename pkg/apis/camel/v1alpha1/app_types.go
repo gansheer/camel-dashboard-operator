@@ -158,6 +158,18 @@ type ExchangeInfo struct {
 	LastTimestamp *metav1.Time `json:"lastTimestamp,omitempty"`
 }
 
+// SLIExchangeStatus --.
+type SLIExchangeStatus string
+
+const (
+	// SLIExchangeStatusError --.
+	SLIExchangeStatusError SLIExchangeStatus = "Error"
+	// SLIExchangeStatusWarning --.
+	SLIExchangeStatusWarning SLIExchangeStatus = "Warning"
+	// SLIExchangeStatusSuccess likely scaled to 0.
+	SLIExchangeStatusSuccess SLIExchangeStatus = "Success"
+)
+
 // SLIExchangeSuccessRate contains the information related to the SLI.
 type SLIExchangeSuccessRate struct {
 	// the success percentage
@@ -171,5 +183,5 @@ type SLIExchangeSuccessRate struct {
 	// the last message timestamp
 	LastTimestamp *metav1.Time `json:"lastTimestamp,omitempty"`
 	// a human readable status information
-	Status string `json:"status,omitempty"`
+	Status SLIExchangeStatus `json:"status,omitempty"`
 }
