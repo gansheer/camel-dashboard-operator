@@ -66,6 +66,7 @@ func (action *monitorAction) Handle(ctx context.Context, app *v1alpha1.App) (*v1
 	}
 	targetApp := app.DeepCopy()
 	targetApp.Status = v1alpha1.AppStatus{}
+	targetApp.ImportCamelAnnotations(nonManagedApp.GetAnnotations())
 
 	deployImage := nonManagedApp.GetAppImage()
 	appPhase := nonManagedApp.GetAppPhase()
@@ -73,7 +74,7 @@ func (action *monitorAction) Handle(ctx context.Context, app *v1alpha1.App) (*v1
 	targetApp.Status.Image = deployImage
 	pods, err := nonManagedApp.GetPods(ctx, action.client)
 	if err != nil {
-		return nil, err
+		return targetApp, err
 	}
 	targetApp.Status.Pods = pods
 	targetApp.Status.Replicas = nonManagedApp.GetReplicas()

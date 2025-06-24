@@ -18,10 +18,14 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
+	// camelPrefix is used to identify Camel prefix labels/annotations.
+	camelPrefix = "camel.apache.org"
 	// AppLabel is used to tag k8s object created by a given Camel Application.
 	AppLabel = "camel.apache.org/app"
 	// AppSyntheticLabel is used to tag k8s synthetic Camel Applications.
@@ -67,4 +71,13 @@ func (appStatus *AppStatus) AddCondition(condition metav1.Condition) {
 		appStatus.Conditions = []metav1.Condition{}
 	}
 	appStatus.Conditions = append(appStatus.Conditions, condition)
+}
+
+// ImportCamelAnnotations copies all camel annotations from the deployment to the App.
+func (app *App) ImportCamelAnnotations(annotations map[string]string) {
+	for k, v := range annotations {
+		if strings.HasPrefix(k, camelPrefix) {
+			app.Annotations[k] = v
+		}
+	}
 }

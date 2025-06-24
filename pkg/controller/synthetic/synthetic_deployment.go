@@ -55,6 +55,7 @@ func (app *nonManagedCamelDeployment) CamelApp(ctx context.Context, c client.Cli
 		v1alpha1.AppImportedKindLabel: "Deployment",
 		v1alpha1.AppSyntheticLabel:    "true",
 	})
+	newApp.ImportCamelAnnotations(app.deploy.Annotations)
 	references := []metav1.OwnerReference{
 		{
 			APIVersion: "apps/v1",
