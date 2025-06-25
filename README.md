@@ -78,6 +78,10 @@ camel-app-413       Running   8m32s           OK             squakez/cdb:4.13   
 
 NOTE: more information are available inspecting the custom resource (i.e. via `-o yaml`).
 
+## Camel annotations synchronization
+
+As you will discover in the chapters below, you can provide specific configuration for each `App`. In order to keep the operator in synch with any deployment tool, you should therefore annotate the backing deployment object (ie, the `Deployment`) with such specific configuration. The operator will automatically synchronize any annotation prefixed with `camel.apache.org`.
+
 ## Configure the metrics polling
 
 You can watch the metrics evolving as long as the application is running, for example via `-w` parameter:
