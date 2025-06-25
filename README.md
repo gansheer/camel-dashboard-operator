@@ -107,7 +107,7 @@ NOTE: this will affect all your applications. Setting it a low value can reduce 
 
 ### Application level
 
-You can add an annotation to the `App` resource, `camel.apache.org/polling-interval-seconds` with the value you want.
+You can add an annotation to the `Deployment` resource, `camel.apache.org/polling-interval-seconds` with the value you want.
 
 NOTE: although this configuration will only affect the single application, consider the right balance to avoid affecting the application performances.
 
@@ -121,7 +121,7 @@ You can setup the environment variables `SLI_ERR_PERCENTAGE` and `SLI_WARN_PERCE
 
 ### Application level
 
-You can add an annotation to the `App` resource, `camel.apache.org/sli-exchange-error-percentage` and `camel.apache.org/sli-exchange-warning-percentage` with the value expected for that specific `App` only.
+You can add an annotation to the `Deployment` resource, `camel.apache.org/sli-exchange-error-percentage` and `camel.apache.org/sli-exchange-warning-percentage` with the value expected for that specific application only.
 
 ## Configure the observability services port
 
@@ -133,7 +133,7 @@ You can setup the environment variables `OBSERVABILITY_PORT` with the number of 
 
 ### Application level
 
-You can add an annotation to the `App` resource, `camel.apache.org/observability-services-port` with the value expected for that specific `App` only.
+You can add an annotation to the `Deployment` resource, `camel.apache.org/observability-services-port` with the value expected for that specific application only.
 
 ## Openshift plugin
 
