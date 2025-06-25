@@ -216,8 +216,13 @@ func getSLIExchangeSuccessRate(app, target v1alpha1.RuntimeInfo, pollingInteval 
 		successRate := 100 - failureRate
 		sliExchangeSuccessRate.SuccessPercentage = strconv.FormatFloat(successRate, 'f', 2, 64)
 	}
-	sliExchangeSuccessRate.SamplingIntervalTotal = totalLastInterval
-	sliExchangeSuccessRate.SamplingIntervalFailed = failedLastInterval
+
+	if totalLastInterval >= 0 {
+		sliExchangeSuccessRate.SamplingIntervalTotal = totalLastInterval
+	}
+	if failedLastInterval >= 0 {
+		sliExchangeSuccessRate.SamplingIntervalFailed = failedLastInterval
+	}
 
 	if failureRate > float64(sliWarnPerc) {
 		sliExchangeSuccessRate.Status = v1alpha1.SLIExchangeStatusError
