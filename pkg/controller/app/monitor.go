@@ -113,6 +113,24 @@ func (action *monitorAction) Handle(ctx context.Context, app *v1alpha1.App) (*v1
 		})
 	}
 
+	if len(pods) > 0 && allPodsUp(pods) {
+		targetApp.Status.AddCondition(metav1.Condition{
+			Type:               "Healthy",
+			Status:             metav1.ConditionTrue,
+			LastTransitionTime: metav1.NewTime(time.Now()),
+			Reason:             "HealthCheckCompleted",
+			Message:            "All pods are reported as healthy.",
+		})
+	} else {
+		targetApp.Status.AddCondition(metav1.Condition{
+			Type:               "Healthy",
+			Status:             metav1.ConditionFalse,
+			LastTransitionTime: metav1.NewTime(time.Now()),
+			Reason:             "HealthCheckCompleted",
+			Message:            "Some pod is not healthy. See specific pods statuses messages.",
+		})
+	}
+
 	return targetApp, nil
 }
 
@@ -186,6 +204,16 @@ func getInfo(pods []v1alpha1.PodInfo) *v1alpha1.RuntimeInfo {
 func allPodsReady(pods []v1alpha1.PodInfo) bool {
 	for _, pod := range pods {
 		if !pod.Ready {
+			return false
+		}
+	}
+
+	return true
+}
+
+func allPodsUp(pods []v1alpha1.PodInfo) bool {
+	for _, pod := range pods {
+		if pod.Runtime == nil || pod.Runtime.Status != "UP" {
 			return false
 		}
 	}

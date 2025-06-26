@@ -306,20 +306,23 @@ func setHealth(podInfo *v1alpha1.PodInfo, podIp string, port int) error {
 	if err != nil {
 		return err
 	}
+	status := "Unknown"
 	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusOK {
+	// The endpoint reports 503 when the service is down, but still provide the
+	// health information
+	if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusServiceUnavailable {
 		podInfo.ObservabilityService.HealthPort = port
 		podInfo.ObservabilityService.HealthEndpoint = platform.DefaultObservabilityHealth
 
-		status, err := parseHealthStatus(resp.Body)
+		status, err = parseHealthStatus(resp.Body)
 		if err != nil {
 			return err
 		}
-		if podInfo.Runtime == nil {
-			podInfo.Runtime = &v1alpha1.RuntimeInfo{}
-		}
-		podInfo.Runtime.Status = status
 	}
+	if podInfo.Runtime == nil {
+		podInfo.Runtime = &v1alpha1.RuntimeInfo{}
+	}
+	podInfo.Runtime.Status = status
 
 	return nil
 }

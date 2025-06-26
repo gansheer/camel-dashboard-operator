@@ -48,6 +48,9 @@ spec:
       jsonPath: .status.replicas
       name: Replicas
       type: string
+    - jsonPath: .status.conditions[?(@.type=="Healthy")].status
+      name: Healthy
+      type: string
     - jsonPath: .status.conditions[?(@.type=="Monitored")].status
       name: Monitored
       type: string
