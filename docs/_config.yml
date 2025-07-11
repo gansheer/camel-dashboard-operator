@@ -35,6 +35,10 @@ sidebar:
   - label: Configuration
     children:
       - import
+  - label: Plugins
+    children:
+      - oc-console
+      - hawtio
   - about
 
 search_enabled: true
