@@ -29,13 +29,13 @@ markdown: kramdown
 
 ### Zendesk theme
 # https://zendesk.github.io/jekyll-theme-zendesk-garden/getting_started.html
-remote_theme: zendesk/jekyll-theme-zendesk-garden@v0.3.0
+remote_theme: zendesk/jekyll-theme-zendesk-garden@v0.7.3
 sidebar:
-  - Install
+  - install
   - label: Configuration
     children:
       - import
-  - About
+  - about
 
 search_enabled: true
 ### Zendesk theme
