@@ -31,7 +31,11 @@ markdown: kramdown
 # https://zendesk.github.io/jekyll-theme-zendesk-garden/getting_started.html
 remote_theme: zendesk/jekyll-theme-zendesk-garden@v0.3.0
 sidebar:
-  - about
+  - Install
+  - label: Configuration
+    children:
+      - import
+  - About
 
 search_enabled: true
 ### Zendesk theme
