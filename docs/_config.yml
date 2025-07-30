@@ -35,6 +35,7 @@ sidebar:
   - label: Configuration
     children:
       - import
+      - tuning
   - label: Plugins
     children:
       - oc-console
