@@ -2,6 +2,27 @@ apiVersion: v1
 entries:
   camel-dashboard:
   - apiVersion: v2
+    appVersion: 0.0.2-SNAPSHOT
+    created: "2025-08-05T13:43:53.922112409+02:00"
+    description: TODO
+    digest: 973bc6edf6b6b870e17a563a47c3667378b3a364854fa3aa526c7a5b03e1f614
+    home: https://camel.apache.org/camel/latest/
+    icon: https://github.com/apache/camel/raw/main/docs/img/logo64-d.png
+    keywords:
+    - integration
+    - camel
+    - dashboard
+    maintainers:
+    - email: pcongiusti@apache.org
+      name: pcongiusti
+    name: camel-dashboard
+    sources:
+    - https://github.com/camel-tooling/camel-dashboard-operator
+    type: application
+    urls:
+    - https://camel-tooling.github.io/camel-dashboard-charts/camel-dashboard-0.0.2-SNAPSHOT.tgz
+    version: 0.0.2-SNAPSHOT
+  - apiVersion: v2
     appVersion: 0.0.1-SNAPSHOT
     created: "2025-07-29T11:05:26.204498856+02:00"
     description: TODO
@@ -43,4 +64,4 @@ entries:
     urls:
     - https://camel-tooling.github.io/camel-dashboard-charts/camel-dashboard-0.0.1-SNAPSHOT.tgz
     version: 0.0.1-SNAPSHOT
-generated: "2025-07-29T11:05:26.204016442+02:00"
+generated: "2025-08-05T13:43:53.921681711+02:00"
