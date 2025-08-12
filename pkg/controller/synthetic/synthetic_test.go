@@ -124,7 +124,7 @@ func TestNonManagedDeployment(t *testing.T) {
 	deploymentAdapter, err := NonManagedCamelApplicationFactory(deploy)
 	require.NoError(t, err)
 	assert.NotNil(t, deploymentAdapter)
-	assert.Equal(t, expectedIt.ObjectMeta, *&deploymentAdapter.CamelApp(context.Background(), nil).ObjectMeta)
+	assert.Equal(t, expectedIt.ObjectMeta, deploymentAdapter.CamelApp(context.Background(), nil).ObjectMeta)
 }
 
 func TestNonManagedCronJob(t *testing.T) {
