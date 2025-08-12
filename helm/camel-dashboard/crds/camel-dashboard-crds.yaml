@@ -169,6 +169,9 @@ spec:
                     internalIp:
                       description: the Pod ip
                       type: string
+                    jolokiaEnabled:
+                      description: the Pod exposes the jolokia port
+                      type: boolean
                     name:
                       description: the Pod name
                       type: string

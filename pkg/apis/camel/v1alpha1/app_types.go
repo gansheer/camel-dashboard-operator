@@ -117,6 +117,8 @@ type PodInfo struct {
 	ObservabilityService *ObservabilityServiceInfo `json:"observe,omitempty"`
 	// Some information about the Camel runtime
 	Runtime *RuntimeInfo `json:"runtime,omitempty"`
+	// the Pod exposes the jolokia port
+	JolokiaEnabled bool `json:"jolokiaEnabled,omitempty"`
 }
 
 // RuntimeInfo contains a set of information related to the Camel application runtime.

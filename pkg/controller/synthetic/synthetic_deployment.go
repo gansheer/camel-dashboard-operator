@@ -112,9 +112,10 @@ func (app *nonManagedCamelDeployment) GetPods(ctx context.Context, c client.Clie
 	for _, pod := range pods.Items {
 		podIp := pod.Status.PodIP
 		podInfo := v1alpha1.PodInfo{
-			Name:       pod.GetName(),
-			Status:     string(pod.Status.Phase),
-			InternalIP: podIp,
+			Name:           pod.GetName(),
+			Status:         string(pod.Status.Phase),
+			InternalIP:     podIp,
+			JolokiaEnabled: kubernetes.JolokiaEnabled(pod),
 		}
 
 		// Check the services only if the Pod is ready
