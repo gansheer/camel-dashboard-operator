@@ -44,7 +44,7 @@ Additional parameters can be specified if desired. Consult the chart values file
 Install the chart using the name of the plugin as the Helm release name into a new namespace or an existing namespace as specified by the camel-openshift-console-plugin parameter and providing the location of the image within the `plugin.image` parameter by using the following command:
 
 ```
-helm upgrade -i camel-openshift-console-plugin https://github.com/camel-tooling/camel-openshift-console-plugin/raw/refs/heads/release-1.0.x/docs/charts/camel-openshift-console-plugin-0.2.0.tgz --namespace camel-dashboard --set plugin.image=quay.io/camel-tooling/camel-openshift-console-plugin:0.2.0
+helm upgrade -i camel-openshift-console-plugin https://github.com/camel-tooling/camel-openshift-console-plugin/raw/refs/heads/main/docs/charts/camel-openshift-console-plugin-0.2.0.tgz --namespace camel-dashboard --set plugin.image=quay.io/camel-tooling/camel-openshift-console-plugin:0.2.0
 ```
 
 NOTE: the installation procedure is still in alpha phase. Verify the latest release and change the version (ie, `0.2.0`) from the previous script accordingly.
