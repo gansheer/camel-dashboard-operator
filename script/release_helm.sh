@@ -27,10 +27,10 @@ mkdir -p $targetdir
 
 cd $rootdir/helm
 
-helm package ./camel-dashboard --version $version
+helm package ./camel-dashboard --version $version --app-version $version
 mv camel-dashboard-*.tgz $targetdir/
 # TODO: create https://github.com/camel-tooling/camel-dashboard-charts similar to https://github.com/hawtio/hawtio-charts
-helm repo index $targetdir --url https://camel-tooling.github.io/camel-dashboard-charts/ --merge $helm_index
+helm repo index $targetdir --url https://camel-tooling.github.io/camel-dashboard/ --merge $helm_index
 # Required to prevent https://github.com/helm/helm/issues/7363
 mv $targetdir/* $targetdir/../.
 rm -rf $targetdir
