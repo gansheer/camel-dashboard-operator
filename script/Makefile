@@ -381,8 +381,8 @@ images-nightly: clean codegen set-version images-all
 release-nightly: cross-compile images-push-all
 
 release-helm:
-	./script/set_version.sh ${VERSION}
-	./script/release_helm.sh ${VERSION}
+	./script/set_version.sh $(CUSTOM_VERSION) $(CUSTOM_IMAGE)
+	./script/release_helm.sh $(CUSTOM_VERSION)
 
 .PHONY: do-build build build-camel-dashboard build-camel-dashboard-platform dep codegen images images-push image-build test check clean release cross-compile package-examples set-version git-tag check-licenses release-helm release-staging release-nightly get-staging-repo get-version
 .PHONY: kubectl kustomize operator-sdk opm
