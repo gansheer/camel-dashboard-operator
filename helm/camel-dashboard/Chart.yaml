@@ -17,13 +17,12 @@
 
 apiVersion: v2
 name: camel-dashboard-operator
-description: TODO
+description: A Helm chart for installing the Camel Dashboard Operator
 type: application
 version: 0.1.1-SNAPSHOT
 appVersion: 0.1.1-SNAPSHOT
-# TODO: logo and official docs
-icon: https://github.com/apache/camel/raw/main/docs/img/logo64-d.png
-home: https://camel.apache.org/camel/latest/
+icon: https://github.com/camel-tooling/camel-dashboard/raw/main/docs/static/images/logo.png
+home: https://camel-tooling.github.io/camel-dashboard/
 sources:
   - https://github.com/camel-tooling/camel-dashboard-operator
 keywords:
