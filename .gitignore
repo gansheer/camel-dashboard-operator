@@ -3,3 +3,4 @@ bin
 build/_output
 /camel-dashboard
 Gemfile.lock
+/license-check
