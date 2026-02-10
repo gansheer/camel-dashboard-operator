@@ -15,12 +15,17 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
+annotations:
+  charts.openshift.io/name: Camel Dashboard Operator
 apiVersion: v2
 name: camel-dashboard-operator
 description: A Helm chart for installing the Camel Dashboard Operator
 type: application
 version: 0.1.1-SNAPSHOT
 appVersion: 0.1.1-SNAPSHOT
+# follows https://github.com/opdev/getocprange/blob/main/kubeOpenShiftVersionMap.yaml
+# dependant on kube libraries
+kubeVersion: ">= 1.33"
 icon: https://github.com/camel-tooling/camel-dashboard/raw/main/docs/static/images/logo.png
 home: https://camel-tooling.github.io/camel-dashboard/
 sources:
