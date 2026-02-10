@@ -1,0 +1,128 @@
+name: validate-helm-chart-schema
+
+on:
+  pull_request:
+    paths:
+      - 'helm/**'
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'helm/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  validate-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+
+      - name: Validate JSON syntax
+        run: |
+          echo "Checking JSON syntax for values.schema.json..."
+          jq empty helm/camel-dashboard/values.schema.json
+          echo "✓ JSON syntax is valid"
+
+      - name: Validate JSON Schema structure
+        run: |
+          echo "Validating JSON Schema structure..."
+          npx -y ajv-cli compile -s helm/camel-dashboard/values.schema.json --spec=draft7
+          echo "✓ Schema structure is valid"
+
+      - name: Validate values.yaml against schema
+        run: |
+          echo "Validating values.yaml against schema..."
+          npx -y ajv-cli validate \
+            -s helm/camel-dashboard/values.schema.json \
+            -d helm/camel-dashboard/values.yaml \
+            --spec=draft7
+          echo "✓ values.yaml is valid against schema"
+
+      - name: Run Helm lint
+        run: |
+          echo "Running Helm lint..."
+          cd helm/camel-dashboard
+          helm lint .
+          echo "✓ Helm lint passed"
+
+      - name: Test schema with example values
+        run: |
+          echo "Testing schema with example values..."
+          cat > test-values.yaml << 'EOF'
+          operator:
+            image: quay.io/camel-tooling/camel-dashboard-operator:test
+            global: true
+            logLevel: debug
+            resources:
+              limits:
+                cpu: 500m
+                memory: 512Mi
+              requests:
+                cpu: 100m
+                memory: 128Mi
+            nodeSelector:
+              kubernetes.io/os: linux
+            tolerations:
+              - key: node-role.kubernetes.io/master
+                operator: Exists
+                effect: NoSchedule
+            extraEnv:
+              - name: TEST_VAR
+                value: test_value
+          EOF
+          npx -y ajv-cli validate \
+            -s helm/camel-dashboard/values.schema.json \
+            -d test-values.yaml \
+            --spec=draft7
+          rm test-values.yaml
+          echo "✓ Example values validated successfully"
+
+      - name: Test schema rejects invalid values
+        run: |
+          echo "Testing schema validation catches errors..."
+          cat > invalid-values.yaml << 'EOF'
+          operator:
+            image: quay.io/camel-tooling/camel-dashboard-operator:test
+            global: "not-a-boolean"
+            logLevel: invalid-level
+          EOF
+          if npx -y ajv-cli validate \
+            -s helm/camel-dashboard/values.schema.json \
+            -d invalid-values.yaml \
+            --spec=draft7 2>&1; then
+            echo "✗ Schema should have rejected invalid values"
+            rm invalid-values.yaml
+            exit 1
+          else
+            echo "✓ Schema correctly rejected invalid values"
+            rm invalid-values.yaml
+          fi
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "================================================"
+          echo "✓ All Helm chart schema validations passed!"
+          echo "================================================"
+          echo "- JSON syntax: valid"
+          echo "- Schema structure: valid"
+          echo "- values.yaml: conforms to schema"
+          echo "- Helm lint: passed"
+          echo "- Example validation: passed"
+          echo "- Error detection: working"
+          echo "================================================"
