@@ -22,3 +22,12 @@ updates:
     package-ecosystem: "gomod"
     schedule:
       interval: "daily"
+    ignore:
+      - dependency-name: "k8s.io/api"
+      - dependency-name: "k8s.io/apiextensions-apiserver"
+      - dependency-name: "k8s.io/apimachinery"
+      - dependency-name: "k8s.io/cli-runtime"
+      - dependency-name: "k8s.io/client-go"
+      - dependency-name: "k8s.io/kubectl"
+      - dependency-name: "sigs.k8s.io/controller-runtime"
+      
