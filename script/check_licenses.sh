@@ -18,7 +18,7 @@
 location=$(dirname $0)
 rootdir=$location/../
 
-denylist=("zz_generated" "zz_desc_generated" "vendor" "./.mvn/wrapper" "./docs/" "./.idea" "./build/" "./deploy/traits.yaml" "./pom.xml" "./java/")
+denylist=("zz_generated" "zz_desc_generated" "vendor" "./.mvn/wrapper" "./docs/" "./.idea" "./build/" "./deploy/traits.yaml" "./pom.xml" "./java/", "*.json")
 
 cd $rootdir
 go build ./cmd/util/license-check/
