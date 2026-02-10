@@ -1,0 +1,256 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Camel Dashboard Operator Helm Chart Values",
+  "description": "JSON Schema for Camel Dashboard Operator Helm chart values",
+  "type": "object",
+  "properties": {
+    "nameOverride": {
+      "type": "string",
+      "description": "Override the chart name"
+    },
+    "fullnameOverride": {
+      "type": "string",
+      "description": "Override the full name of the chart"
+    },
+    "operator": {
+      "type": "object",
+      "description": "Operator configuration",
+      "properties": {
+        "image": {
+          "type": "string",
+          "description": "Container image for the operator",
+          "pattern": "^[a-z0-9._/-]+(:([a-z0-9._-]+|[a-z0-9._-]+@sha256:[a-f0-9]{64}))?$"
+        },
+        "global": {
+          "type": "boolean",
+          "description": "Enable global scope for the operator"
+        },
+        "resources": {
+          "type": "object",
+          "description": "Kubernetes resource requests and limits",
+          "properties": {
+            "limits": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(\\.[0-9]+)?(m)?$"
+                },
+                "memory": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(\\.[0-9]+)?(Mi|Gi|M|G)?$"
+                }
+              },
+              "additionalProperties": true
+            },
+            "requests": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(\\.[0-9]+)?(m)?$"
+                },
+                "memory": {
+                  "type": "string",
+                  "pattern": "^[0-9]+(\\.[0-9]+)?(Mi|Gi|M|G)?$"
+                }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "securityContext": {
+          "type": "object",
+          "description": "Security context for the operator pod",
+          "properties": {
+            "runAsUser": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runAsGroup": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "fsGroup": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runAsNonRoot": {
+              "type": "boolean"
+            },
+            "readOnlyRootFilesystem": {
+              "type": "boolean"
+            },
+            "allowPrivilegeEscalation": {
+              "type": "boolean"
+            },
+            "capabilities": {
+              "type": "object",
+              "properties": {
+                "drop": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "add": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "seccompProfile": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "localhostProfile": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "tolerations": {
+          "type": "array",
+          "description": "Tolerations for pod assignment",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "operator": {
+                "type": "string",
+                "enum": ["Equal", "Exists"]
+              },
+              "value": {
+                "type": "string"
+              },
+              "effect": {
+                "type": "string",
+                "enum": ["NoSchedule", "PreferNoSchedule", "NoExecute"]
+              },
+              "tolerationSeconds": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "nodeSelector": {
+          "type": "object",
+          "description": "Node selector for pod assignment",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "logLevel": {
+          "type": "string",
+          "description": "Log level for the operator",
+          "enum": ["debug", "info", "warn", "error", "fatal", "panic"],
+          "default": "info"
+        },
+        "annotations": {
+          "type": ["object", "null"],
+          "description": "Annotations to add to the deployment",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "serviceAccount": {
+          "type": "object",
+          "description": "Service account configuration",
+          "properties": {
+            "annotations": {
+              "type": ["object", "null"],
+              "description": "Annotations to add to the service account",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "extraEnv": {
+          "type": "array",
+          "description": "Additional environment variables",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Environment variable name"
+              },
+              "value": {
+                "type": "string",
+                "description": "Environment variable value"
+              },
+              "valueFrom": {
+                "type": "object",
+                "description": "Source for the environment variable value",
+                "properties": {
+                  "secretKeyRef": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "key": {
+                        "type": "string"
+                      },
+                      "optional": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": ["name", "key"]
+                  },
+                  "configMapKeyRef": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "key": {
+                        "type": "string"
+                      },
+                      "optional": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": ["name", "key"]
+                  },
+                  "fieldRef": {
+                    "type": "object",
+                    "properties": {
+                      "fieldPath": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["fieldPath"]
+                  }
+                }
+              }
+            },
+            "oneOf": [
+              {
+                "required": ["value"]
+              },
+              {
+                "required": ["valueFrom"]
+              }
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
