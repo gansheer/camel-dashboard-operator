@@ -52,6 +52,8 @@ jobs:
     - name: Install Camel Monitor operator
       shell: bash
       run: |
+       sed -i 's#quay\.io/camel-tooling/camel-monitor-operator:[^[:space:]]*#quay.io/camel-tooling/camel-monitor-operator:latest-arm64#g' \
+          install/base/config/manager/operator-deployment.yaml
         kubectl create ns camel
         make install-k8s-global
         kubectl wait --for=condition=available deployment/camel-monitor-operator --timeout=180s -n camel
