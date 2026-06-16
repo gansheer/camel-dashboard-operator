@@ -35,7 +35,7 @@ jobs:
         # We want to check this on latest development branch only
         ref-branch: [main]
 
-    if: github.repository == 'apache/camel-k'
+    if: github.repository == 'camel-tooling/camel-monitor-operator'
     runs-on: ubuntu-24.04-arm
     steps:
 
