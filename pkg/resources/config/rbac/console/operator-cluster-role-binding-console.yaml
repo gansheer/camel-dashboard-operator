@@ -14,25 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ---------------------------------------------------------------------------
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
 
-# Labels to add to all resources and selectors.
-labels:
-- includeSelectors: true
-  pairs:
-    app: camel-monitor-operator
-
-resources:
-- ../manager
-- ../crd
-- ../samples
-- ../scorecard
-- ../rbac
-- ../rbac/namespaced
-- ../rbac/console
-
-images:
-- name: quay.io/camel-tooling/camel-monitor-operator
-  newName: quay.io/camel-tooling/camel-monitor-operator
-  newTag: 0.3.0-SNAPSHOT
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: camel-monitor-operator-console
+  labels:
+    app: "camel-monitor"
+subjects:
+- kind: ServiceAccount
+  name: camel-monitor-operator
+roleRef:
+  kind: ClusterRole
+  name: camel-monitor-operator-console
+  apiGroup: rbac.authorization.k8s.io

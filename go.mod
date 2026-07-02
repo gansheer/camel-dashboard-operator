@@ -7,6 +7,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/grafana/grafana-operator/v5 v5.24.0
 	github.com/onsi/gomega v1.42.1
+	github.com/openshift/api v0.0.0-20260708103422-b1cc68a860b3
 	github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.92.1
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/client_model v0.6.2

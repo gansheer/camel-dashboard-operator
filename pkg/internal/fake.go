@@ -21,6 +21,7 @@ import (
 	camelv1alpha1 "github.com/camel-tooling/camel-monitor-operator/pkg/apis/camel/v1alpha1"
 	"github.com/camel-tooling/camel-monitor-operator/pkg/client"
 	integreatlyv1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
+	consolev1 "github.com/openshift/api/console/v1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -69,6 +70,11 @@ func NewFakeClient(objs ...ctrl.Object) (client.Client, error) {
 	}
 
 	err = integreatlyv1beta1.AddToScheme(scheme)
+	if err != nil {
+		return nil, err
+	}
+
+	err = consolev1.AddToScheme(scheme)
 	if err != nil {
 		return nil, err
 	}

@@ -82,6 +82,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: RELATED_IMAGE_CONSOLE_PLUGIN
+              value: quay.io/camel-tooling/camel-dashboard-console:0.5.1
             # NAMESPACE is always the operator namespace, independently of WATCH_NAMESPACE
             - name: NAMESPACE
               valueFrom:
