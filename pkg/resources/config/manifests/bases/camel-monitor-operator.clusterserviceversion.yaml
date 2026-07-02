@@ -20,6 +20,7 @@ kind: ClusterServiceVersion
 metadata:
   annotations:
     capabilities: Full Lifecycle
+    console.openshift.io/plugins: '["camel-dashboard-console"]'
     categories: Observability
     certified: "false"
     containerImage: quay.io/camel-tooling/camel-monitor-operator:0.3.0-SNAPSHOT

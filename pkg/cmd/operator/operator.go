@@ -30,6 +30,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	consolev1 "github.com/camel-tooling/camel-monitor-operator/pkg/apis/console/v1"
 	integreatlyv1beta1 "github.com/grafana/grafana-operator/v5/api/v1beta1"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -192,6 +193,7 @@ func Run(healthPort, monitoringPort int, leaderElection bool, leaderElectionID s
 	exitOnError(apis.AddToScheme(mgr.GetScheme()), "Could not add Camel Monitor API to scheme")
 	exitOnError(monitoringv1.AddToScheme(mgr.GetScheme()), "Could not add Prometheus API to scheme")
 	exitOnError(integreatlyv1beta1.AddToScheme(mgr.GetScheme()), "Could not add Grafana API to scheme")
+	exitOnError(consolev1.AddToScheme(mgr.GetScheme()), "Could not add ConsolePlugin API to scheme")
 	ctrlClient, err := client.FromManager(mgr)
 	exitOnError(err, "")
 	exitOnError(controller.AddToManager(ctx, mgr, ctrlClient), "")
