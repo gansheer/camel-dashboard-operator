@@ -41,7 +41,7 @@ jobs:
         echo "version=$VERSION" >> "$GITHUB_OUTPUT"
     # Will checkout out the tag automatically
     - name: "Checkout code"
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
     - name: Release ${{ steps.get_version.outputs.version }} version
       uses: ./.github/actions/release
       with:
