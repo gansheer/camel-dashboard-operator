@@ -20,7 +20,6 @@ package console
 import (
 	"context"
 	"os"
-	"time"
 
 	"github.com/camel-tooling/camel-monitor-operator/pkg/client"
 	"github.com/camel-tooling/camel-monitor-operator/pkg/platform"
@@ -29,16 +28,20 @@ import (
 	consolev1 "github.com/openshift/api/console/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-const (
-	consoleImageEnv   = "RELATED_IMAGE_CONSOLE_PLUGIN"
-	reconcileInterval = 5 * time.Minute
-)
+const consoleImageEnv = "RELATED_IMAGE_CONSOLE_PLUGIN"
 
 var log = logutil.Log.WithName("console")
 
@@ -75,155 +78,151 @@ func Add(ctx context.Context, mgr manager.Manager, c client.Client) error {
 	}
 
 	r := &reconciler{
-		client:    c,
-		reader:    mgr.GetAPIReader(),
+		client:    mgr.GetClient(),
 		namespace: namespace,
 		image:     image,
 	}
 
-	return mgr.Add(manager.RunnableFunc(func(ctx context.Context) error {
-		log.Info("Starting console manager")
+	nameFilter := predicate.NewPredicateFuncs(func(obj ctrl.Object) bool {
+		return obj.GetName() == pluginName
+	})
 
-		err := r.ensureAllResources(ctx)
-		if err != nil {
-			log.Error(err, "Failed initial console deployment")
+	mapToConsole := handler.EnqueueRequestsFromMapFunc(
+		func(_ context.Context, _ ctrl.Object) []reconcile.Request {
+			return []reconcile.Request{{NamespacedName: types.NamespacedName{
+				Name:      pluginName,
+				Namespace: namespace,
+			}}}
+		},
+	)
+
+	bootstrapCh := make(chan event.GenericEvent, 1)
+
+	err = builder.ControllerManagedBy(mgr).
+		Named("console-controller").
+		Watches(&appsv1.Deployment{}, mapToConsole, builder.WithPredicates(nameFilter)).
+		Watches(&corev1.Service{}, mapToConsole, builder.WithPredicates(nameFilter)).
+		Watches(&corev1.ConfigMap{}, mapToConsole, builder.WithPredicates(nameFilter)).
+		Watches(&consolev1.ConsolePlugin{}, mapToConsole, builder.WithPredicates(nameFilter)).
+		WatchesRawSource(source.Channel(bootstrapCh, mapToConsole)).
+		Complete(r)
+	if err != nil {
+		return err
+	}
+
+	return mgr.Add(manager.RunnableFunc(func(_ context.Context) error {
+		log.Info("Triggering initial console reconciliation")
+
+		bootstrapCh <- event.GenericEvent{
+			Object: &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{
+				Name:      pluginName,
+				Namespace: namespace,
+			}},
 		}
 
-		ticker := time.NewTicker(reconcileInterval)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return nil
-			case <-ticker.C:
-				err := r.ensureAllResources(ctx)
-				if err != nil {
-					log.Error(err, "Failed console reconciliation")
-				}
-			}
-		}
+		return nil
 	}))
 }
 
 type reconciler struct {
-	client    client.Client
-	reader    ctrl.Reader
+	client    ctrl.Client
 	namespace string
 	image     string
 }
 
+func (r *reconciler) Reconcile(ctx context.Context, _ reconcile.Request) (reconcile.Result, error) {
+	log.Info("Reconciling console resources")
+
+	if err := r.ensureAllResources(ctx); err != nil {
+		log.Error(err, "Failed console reconciliation")
+
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
 func (r *reconciler) ensureAllResources(ctx context.Context) error {
-	err := r.ensureConfigMap(ctx)
-	if err != nil {
+	if err := r.ensureConfigMap(ctx); err != nil {
 		return err
 	}
 
-	err = r.ensureDeployment(ctx)
-	if err != nil {
+	if err := r.ensureDeployment(ctx); err != nil {
 		return err
 	}
 
-	err = r.ensureService(ctx)
-	if err != nil {
+	if err := r.ensureService(ctx); err != nil {
 		return err
 	}
 
-	err = r.ensureConsolePlugin(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return r.ensureConsolePlugin(ctx)
 }
 
 func (r *reconciler) ensureConfigMap(ctx context.Context) error {
-	desired := configMap(r.namespace)
+	cm := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{
+		Name:      pluginName,
+		Namespace: r.namespace,
+	}}
 
-	existing := &corev1.ConfigMap{}
-	err := r.reader.Get(ctx, types.NamespacedName{Name: desired.Name, Namespace: desired.Namespace}, existing)
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, cm, func() error {
+		cm.Labels = commonLabels()
+		cm.Data = map[string]string{"nginx.conf": nginxConfig()}
 
-	if k8serrors.IsNotFound(err) {
-		log.Infof("Creating ConfigMap %s/%s", desired.Namespace, desired.Name)
+		return nil
+	})
 
-		return r.client.Create(ctx, desired)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	existing.Labels = desired.Labels
-	existing.Data = desired.Data
-
-	return r.client.Update(ctx, existing)
+	return err
 }
 
 func (r *reconciler) ensureDeployment(ctx context.Context) error {
-	desired := deployment(r.namespace, r.image)
+	deploy := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{
+		Name:      pluginName,
+		Namespace: r.namespace,
+	}}
 
-	existing := &appsv1.Deployment{}
-	err := r.reader.Get(ctx, types.NamespacedName{Name: desired.Name, Namespace: desired.Namespace}, existing)
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deploy, func() error {
+		d := deployment(r.namespace, r.image)
+		deploy.Labels = d.Labels
+		deploy.Spec = d.Spec
 
-	if k8serrors.IsNotFound(err) {
-		log.Infof("Creating Deployment %s/%s", desired.Namespace, desired.Name)
+		return nil
+	})
 
-		return r.client.Create(ctx, desired)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	existing.Labels = desired.Labels
-	existing.Spec = desired.Spec
-
-	return r.client.Update(ctx, existing)
+	return err
 }
 
 func (r *reconciler) ensureService(ctx context.Context) error {
-	desired := service(r.namespace)
+	svc := &corev1.Service{ObjectMeta: metav1.ObjectMeta{
+		Name:      pluginName,
+		Namespace: r.namespace,
+	}}
 
-	existing := &corev1.Service{}
-	err := r.reader.Get(ctx, types.NamespacedName{Name: desired.Name, Namespace: desired.Namespace}, existing)
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, svc, func() error {
+		s := service(r.namespace)
+		svc.Labels = s.Labels
+		svc.Annotations = s.Annotations
+		svc.Spec.Ports = s.Spec.Ports
+		svc.Spec.Selector = s.Spec.Selector
+		svc.Spec.Type = s.Spec.Type
 
-	if k8serrors.IsNotFound(err) {
-		log.Infof("Creating Service %s/%s", desired.Namespace, desired.Name)
+		return nil
+	})
 
-		return r.client.Create(ctx, desired)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	existing.Labels = desired.Labels
-	existing.Annotations = desired.Annotations
-	existing.Spec.Ports = desired.Spec.Ports
-	existing.Spec.Selector = desired.Spec.Selector
-	existing.Spec.Type = desired.Spec.Type
-
-	return r.client.Update(ctx, existing)
+	return err
 }
 
 func (r *reconciler) ensureConsolePlugin(ctx context.Context) error {
-	desired := consolePlugin(r.namespace)
+	cp := &consolev1.ConsolePlugin{ObjectMeta: metav1.ObjectMeta{
+		Name: pluginName,
+	}}
 
-	existing := &consolev1.ConsolePlugin{}
-	err := r.reader.Get(ctx, types.NamespacedName{Name: desired.Name}, existing)
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, cp, func() error {
+		p := consolePlugin(r.namespace)
+		cp.Labels = p.Labels
+		cp.Spec = p.Spec
 
-	if k8serrors.IsNotFound(err) {
-		log.Infof("Creating ConsolePlugin %s", desired.Name)
+		return nil
+	})
 
-		return r.client.Create(ctx, desired)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	existing.Labels = desired.Labels
-	existing.Spec = desired.Spec
-
-	return r.client.Update(ctx, existing)
+	return err
 }

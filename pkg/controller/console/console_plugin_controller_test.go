@@ -45,7 +45,6 @@ func newTestReconciler(t *testing.T, objs ...ctrl.Object) *reconciler {
 
 	return &reconciler{
 		client:    fakeClient,
-		reader:    fakeClient,
 		namespace: testNamespace,
 		image:     testImage,
 	}

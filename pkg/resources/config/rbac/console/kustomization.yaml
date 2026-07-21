@@ -21,3 +21,5 @@ kind: Kustomization
 resources:
 - operator-cluster-role-console.yaml
 - operator-cluster-role-binding-console.yaml
+- operator-role-console.yaml
+- operator-role-binding-console.yaml
