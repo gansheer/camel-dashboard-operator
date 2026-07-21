@@ -45,6 +45,7 @@ func newTestReconciler(t *testing.T, objs ...ctrl.Object) *reconciler {
 
 	return &reconciler{
 		client:    fakeClient,
+		reader:    fakeClient,
 		namespace: testNamespace,
 		image:     testImage,
 	}
@@ -235,4 +236,61 @@ func TestEnsureAllResources(t *testing.T) {
 	cp := &consolev1.ConsolePlugin{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pluginName}, cp)
 	assert.NoError(t, err)
+}
+
+func TestEnsureAllResources_WithOwnerRef(t *testing.T) {
+	ownerDeploy := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      operatorDeploymentName,
+			Namespace: testNamespace,
+			UID:       "test-uid-123",
+		},
+	}
+	r := newTestReconciler(t)
+	r.ownerRef = &metav1.OwnerReference{
+		APIVersion: "apps/v1",
+		Kind:       "Deployment",
+		Name:       ownerDeploy.Name,
+		UID:        ownerDeploy.UID,
+		Controller: new(true),
+	}
+
+	err := r.ensureAllResources(context.TODO())
+	require.NoError(t, err)
+
+	cm := &corev1.ConfigMap{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pluginName, Namespace: testNamespace}, cm)
+	require.NoError(t, err)
+	require.Len(t, cm.OwnerReferences, 1)
+	assert.Equal(t, operatorDeploymentName, cm.OwnerReferences[0].Name)
+	assert.Equal(t, types.UID("test-uid-123"), cm.OwnerReferences[0].UID)
+
+	deploy := &appsv1.Deployment{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pluginName, Namespace: testNamespace}, deploy)
+	require.NoError(t, err)
+	require.Len(t, deploy.OwnerReferences, 1)
+	assert.Equal(t, operatorDeploymentName, deploy.OwnerReferences[0].Name)
+
+	svc := &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pluginName, Namespace: testNamespace}, svc)
+	require.NoError(t, err)
+	require.Len(t, svc.OwnerReferences, 1)
+	assert.Equal(t, operatorDeploymentName, svc.OwnerReferences[0].Name)
+
+	cp := &consolev1.ConsolePlugin{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pluginName}, cp)
+	require.NoError(t, err)
+	assert.Empty(t, cp.OwnerReferences)
+}
+
+func TestEnsureAllResources_WithoutOwnerRef(t *testing.T) {
+	r := newTestReconciler(t)
+
+	err := r.ensureAllResources(context.TODO())
+	require.NoError(t, err)
+
+	cm := &corev1.ConfigMap{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pluginName, Namespace: testNamespace}, cm)
+	require.NoError(t, err)
+	assert.Empty(t, cm.OwnerReferences)
 }

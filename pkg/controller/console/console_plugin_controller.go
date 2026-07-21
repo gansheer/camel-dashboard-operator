@@ -20,6 +20,7 @@ package console
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/camel-tooling/camel-monitor-operator/pkg/client"
 	"github.com/camel-tooling/camel-monitor-operator/pkg/platform"
@@ -28,6 +29,7 @@ import (
 	consolev1 "github.com/openshift/api/console/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,7 +43,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-const consoleImageEnv = "RELATED_IMAGE_CONSOLE_PLUGIN"
+const (
+	consoleImageEnv        = "RELATED_IMAGE_CONSOLE_PLUGIN"
+	operatorDeploymentName = "camel-monitor-operator"
+)
 
 var log = logutil.Log.WithName("console")
 
@@ -77,10 +82,31 @@ func Add(ctx context.Context, mgr manager.Manager, c client.Client) error {
 		return nil
 	}
 
+	var ownerRef *metav1.OwnerReference
+
+	operatorDeploy := &appsv1.Deployment{}
+	if err = mgr.GetAPIReader().Get(ctx, types.NamespacedName{
+		Name:      operatorDeploymentName,
+		Namespace: namespace,
+	}, operatorDeploy); err != nil {
+		log.Info("Operator Deployment not found, owner references will not be set",
+			"name", operatorDeploymentName, "error", err)
+	} else {
+		ownerRef = &metav1.OwnerReference{
+			APIVersion: "apps/v1",
+			Kind:       "Deployment",
+			Name:       operatorDeploy.Name,
+			UID:        operatorDeploy.UID,
+			Controller: new(true),
+		}
+	}
+
 	r := &reconciler{
 		client:    mgr.GetClient(),
+		reader:    mgr.GetAPIReader(),
 		namespace: namespace,
 		image:     image,
+		ownerRef:  ownerRef,
 	}
 
 	nameFilter := predicate.NewPredicateFuncs(func(obj ctrl.Object) bool {
@@ -110,7 +136,7 @@ func Add(ctx context.Context, mgr manager.Manager, c client.Client) error {
 		return err
 	}
 
-	return mgr.Add(manager.RunnableFunc(func(_ context.Context) error {
+	err = mgr.Add(manager.RunnableFunc(func(_ context.Context) error {
 		log.Info("Triggering initial console reconciliation")
 
 		bootstrapCh <- event.GenericEvent{
@@ -122,12 +148,68 @@ func Add(ctx context.Context, mgr manager.Manager, c client.Client) error {
 
 		return nil
 	}))
+	if err != nil {
+		return err
+	}
+
+	writeClient := mgr.GetClient()
+
+	return mgr.Add(manager.RunnableFunc(func(ctx context.Context) error {
+		<-ctx.Done()
+
+		log.Info("Operator shutting down, cleaning up ConsolePlugin")
+
+		deleteCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		cp := &consolev1.ConsolePlugin{ObjectMeta: metav1.ObjectMeta{Name: pluginName}}
+		if err := writeClient.Delete(deleteCtx, cp); err != nil {
+			if !k8serrors.IsNotFound(err) {
+				log.Error(err, "Failed to delete ConsolePlugin on shutdown")
+			}
+
+			return nil
+		}
+
+		log.Info("ConsolePlugin deleted successfully")
+
+		return nil
+	}))
 }
 
 type reconciler struct {
 	client    ctrl.Client
+	reader    ctrl.Reader
 	namespace string
 	image     string
+	ownerRef  *metav1.OwnerReference
+}
+
+func (r *reconciler) setOwnerRef(obj ctrl.Object) {
+	if r.ownerRef != nil {
+		obj.SetOwnerReferences([]metav1.OwnerReference{*r.ownerRef})
+	}
+}
+
+// createOrUpdate wraps controllerutil.CreateOrUpdate with an AlreadyExists fallback.
+// The manager's cache filters Deployments by label selector, so the console Deployment
+// may not be visible in the cache. On AlreadyExists, fall back to a direct API read.
+func (r *reconciler) createOrUpdate(ctx context.Context, obj ctrl.Object, f controllerutil.MutateFn) error {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, obj, f)
+	if !k8serrors.IsAlreadyExists(err) {
+		return err
+	}
+
+	key := types.NamespacedName{Name: obj.GetName(), Namespace: obj.GetNamespace()}
+	if err := r.reader.Get(ctx, key, obj); err != nil {
+		return err
+	}
+
+	if err := f(); err != nil {
+		return err
+	}
+
+	return r.client.Update(ctx, obj)
 }
 
 func (r *reconciler) Reconcile(ctx context.Context, _ reconcile.Request) (reconcile.Result, error) {
@@ -164,14 +246,13 @@ func (r *reconciler) ensureConfigMap(ctx context.Context) error {
 		Namespace: r.namespace,
 	}}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, cm, func() error {
+	return r.createOrUpdate(ctx, cm, func() error {
 		cm.Labels = commonLabels()
 		cm.Data = map[string]string{"nginx.conf": nginxConfig()}
+		r.setOwnerRef(cm)
 
 		return nil
 	})
-
-	return err
 }
 
 func (r *reconciler) ensureDeployment(ctx context.Context) error {
@@ -180,15 +261,14 @@ func (r *reconciler) ensureDeployment(ctx context.Context) error {
 		Namespace: r.namespace,
 	}}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deploy, func() error {
+	return r.createOrUpdate(ctx, deploy, func() error {
 		d := deployment(r.namespace, r.image)
 		deploy.Labels = d.Labels
 		deploy.Spec = d.Spec
+		r.setOwnerRef(deploy)
 
 		return nil
 	})
-
-	return err
 }
 
 func (r *reconciler) ensureService(ctx context.Context) error {
@@ -197,18 +277,17 @@ func (r *reconciler) ensureService(ctx context.Context) error {
 		Namespace: r.namespace,
 	}}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, svc, func() error {
+	return r.createOrUpdate(ctx, svc, func() error {
 		s := service(r.namespace)
 		svc.Labels = s.Labels
 		svc.Annotations = s.Annotations
 		svc.Spec.Ports = s.Spec.Ports
 		svc.Spec.Selector = s.Spec.Selector
 		svc.Spec.Type = s.Spec.Type
+		r.setOwnerRef(svc)
 
 		return nil
 	})
-
-	return err
 }
 
 func (r *reconciler) ensureConsolePlugin(ctx context.Context) error {
@@ -216,13 +295,11 @@ func (r *reconciler) ensureConsolePlugin(ctx context.Context) error {
 		Name: pluginName,
 	}}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, cp, func() error {
+	return r.createOrUpdate(ctx, cp, func() error {
 		p := consolePlugin(r.namespace)
 		cp.Labels = p.Labels
 		cp.Spec = p.Spec
 
 		return nil
 	})
-
-	return err
 }
