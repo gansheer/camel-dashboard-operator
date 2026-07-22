@@ -20,7 +20,7 @@ package console
 import (
 	"context"
 	"os"
-	"time"
+	"strings"
 
 	"github.com/camel-tooling/camel-monitor-operator/pkg/client"
 	"github.com/camel-tooling/camel-monitor-operator/pkg/platform"
@@ -31,6 +31,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
@@ -46,9 +48,17 @@ import (
 const (
 	consoleImageEnv        = "RELATED_IMAGE_CONSOLE_PLUGIN"
 	operatorDeploymentName = "camel-monitor-operator"
+	operatorCSVPrefix = "camel-monitor-operator."
 )
 
-var log = logutil.Log.WithName("console")
+var (
+	log    = logutil.Log.WithName("console")
+	csvGVK = schema.GroupVersionKind{
+		Group:   "operators.coreos.com",
+		Version: "v1alpha1",
+		Kind:    "ClusterServiceVersion",
+	}
+)
 
 func Add(ctx context.Context, mgr manager.Manager, c client.Client) error {
 	if !platform.IsCurrentOperatorGlobal() {
@@ -101,12 +111,31 @@ func Add(ctx context.Context, mgr manager.Manager, c client.Client) error {
 		}
 	}
 
+	var csvName string
+
+	csvList := &unstructured.UnstructuredList{}
+	csvList.SetGroupVersionKind(schema.GroupVersionKind{
+		Group: csvGVK.Group, Version: csvGVK.Version, Kind: csvGVK.Kind + "List",
+	})
+
+	if listErr := mgr.GetAPIReader().List(ctx, csvList, ctrl.InNamespace(namespace)); listErr == nil {
+		for i := range csvList.Items {
+			if strings.HasPrefix(csvList.Items[i].GetName(), operatorCSVPrefix) {
+				csvName = csvList.Items[i].GetName()
+				log.Info("Found operator CSV, watching for uninstall", "name", csvName)
+
+				break
+			}
+		}
+	}
+
 	r := &reconciler{
 		client:    mgr.GetClient(),
 		reader:    mgr.GetAPIReader(),
 		namespace: namespace,
 		image:     image,
 		ownerRef:  ownerRef,
+		csvName:   csvName,
 	}
 
 	nameFilter := predicate.NewPredicateFuncs(func(obj ctrl.Object) bool {
@@ -122,6 +151,13 @@ func Add(ctx context.Context, mgr manager.Manager, c client.Client) error {
 		},
 	)
 
+	csvObj := &unstructured.Unstructured{}
+	csvObj.SetGroupVersionKind(csvGVK)
+
+	csvFilter := predicate.NewPredicateFuncs(func(obj ctrl.Object) bool {
+		return strings.HasPrefix(obj.GetName(), operatorCSVPrefix)
+	})
+
 	bootstrapCh := make(chan event.GenericEvent, 1)
 
 	err = builder.ControllerManagedBy(mgr).
@@ -130,13 +166,14 @@ func Add(ctx context.Context, mgr manager.Manager, c client.Client) error {
 		Watches(&corev1.Service{}, mapToConsole, builder.WithPredicates(nameFilter)).
 		Watches(&corev1.ConfigMap{}, mapToConsole, builder.WithPredicates(nameFilter)).
 		Watches(&consolev1.ConsolePlugin{}, mapToConsole, builder.WithPredicates(nameFilter)).
+		Watches(csvObj, mapToConsole, builder.WithPredicates(csvFilter)).
 		WatchesRawSource(source.Channel(bootstrapCh, mapToConsole)).
 		Complete(r)
 	if err != nil {
 		return err
 	}
 
-	err = mgr.Add(manager.RunnableFunc(func(_ context.Context) error {
+	return mgr.Add(manager.RunnableFunc(func(_ context.Context) error {
 		log.Info("Triggering initial console reconciliation")
 
 		bootstrapCh <- event.GenericEvent{
@@ -148,33 +185,6 @@ func Add(ctx context.Context, mgr manager.Manager, c client.Client) error {
 
 		return nil
 	}))
-	if err != nil {
-		return err
-	}
-
-	writeClient := mgr.GetClient()
-
-	return mgr.Add(manager.RunnableFunc(func(ctx context.Context) error {
-		<-ctx.Done()
-
-		log.Info("Operator shutting down, cleaning up ConsolePlugin")
-
-		deleteCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		cp := &consolev1.ConsolePlugin{ObjectMeta: metav1.ObjectMeta{Name: pluginName}}
-		if err := writeClient.Delete(deleteCtx, cp); err != nil {
-			if !k8serrors.IsNotFound(err) {
-				log.Error(err, "Failed to delete ConsolePlugin on shutdown")
-			}
-
-			return nil
-		}
-
-		log.Info("ConsolePlugin deleted successfully")
-
-		return nil
-	}))
 }
 
 type reconciler struct {
@@ -183,6 +193,7 @@ type reconciler struct {
 	namespace string
 	image     string
 	ownerRef  *metav1.OwnerReference
+	csvName   string
 }
 
 func (r *reconciler) setOwnerRef(obj ctrl.Object) {
@@ -215,6 +226,10 @@ func (r *reconciler) createOrUpdate(ctx context.Context, obj ctrl.Object, f cont
 func (r *reconciler) Reconcile(ctx context.Context, _ reconcile.Request) (reconcile.Result, error) {
 	log.Info("Reconciling console resources")
 
+	if r.isUninstalling(ctx) {
+		return reconcile.Result{}, r.handleUninstall(ctx)
+	}
+
 	if err := r.ensureAllResources(ctx); err != nil {
 		log.Error(err, "Failed console reconciliation")
 
@@ -222,6 +237,37 @@ func (r *reconciler) Reconcile(ctx context.Context, _ reconcile.Request) (reconc
 	}
 
 	return reconcile.Result{}, nil
+}
+
+func (r *reconciler) isUninstalling(ctx context.Context) bool {
+	if r.csvName == "" {
+		return false
+	}
+
+	csv := &unstructured.Unstructured{}
+	csv.SetGroupVersionKind(csvGVK)
+
+	err := r.reader.Get(ctx, types.NamespacedName{Name: r.csvName, Namespace: r.namespace}, csv)
+	if k8serrors.IsNotFound(err) {
+		return true
+	}
+
+	if err != nil {
+		return false
+	}
+
+	return csv.GetDeletionTimestamp() != nil
+}
+
+func (r *reconciler) handleUninstall(ctx context.Context) error {
+	log.Info("Operator CSV being deleted, cleaning up console resources")
+
+	cp := &consolev1.ConsolePlugin{ObjectMeta: metav1.ObjectMeta{Name: pluginName}}
+	if err := r.client.Delete(ctx, cp); err != nil && !k8serrors.IsNotFound(err) {
+		return err
+	}
+
+	return nil
 }
 
 func (r *reconciler) ensureAllResources(ctx context.Context) error {

@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
@@ -293,4 +294,19 @@ func TestEnsureAllResources_WithoutOwnerRef(t *testing.T) {
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pluginName, Namespace: testNamespace}, cm)
 	require.NoError(t, err)
 	assert.Empty(t, cm.OwnerReferences)
+}
+
+func TestHandleUninstall(t *testing.T) {
+	cp := &consolev1.ConsolePlugin{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: pluginName,
+		},
+	}
+	r := newTestReconciler(t, cp)
+
+	err := r.handleUninstall(context.TODO())
+	require.NoError(t, err)
+
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pluginName}, &consolev1.ConsolePlugin{})
+	assert.True(t, k8serrors.IsNotFound(err))
 }
