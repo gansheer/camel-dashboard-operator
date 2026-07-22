@@ -111,31 +111,12 @@ func Add(ctx context.Context, mgr manager.Manager, c client.Client) error {
 		}
 	}
 
-	var csvName string
-
-	csvList := &unstructured.UnstructuredList{}
-	csvList.SetGroupVersionKind(schema.GroupVersionKind{
-		Group: csvGVK.Group, Version: csvGVK.Version, Kind: csvGVK.Kind + "List",
-	})
-
-	if listErr := mgr.GetAPIReader().List(ctx, csvList, ctrl.InNamespace(namespace)); listErr == nil {
-		for i := range csvList.Items {
-			if strings.HasPrefix(csvList.Items[i].GetName(), operatorCSVPrefix) {
-				csvName = csvList.Items[i].GetName()
-				log.Info("Found operator CSV, watching for uninstall", "name", csvName)
-
-				break
-			}
-		}
-	}
-
 	r := &reconciler{
 		client:    mgr.GetClient(),
 		reader:    mgr.GetAPIReader(),
 		namespace: namespace,
 		image:     image,
 		ownerRef:  ownerRef,
-		csvName:   csvName,
 	}
 
 	nameFilter := predicate.NewPredicateFuncs(func(obj ctrl.Object) bool {
@@ -193,7 +174,6 @@ type reconciler struct {
 	namespace string
 	image     string
 	ownerRef  *metav1.OwnerReference
-	csvName   string
 }
 
 func (r *reconciler) setOwnerRef(obj ctrl.Object) {
@@ -240,31 +220,32 @@ func (r *reconciler) Reconcile(ctx context.Context, _ reconcile.Request) (reconc
 }
 
 func (r *reconciler) isUninstalling(ctx context.Context) bool {
-	if r.csvName == "" {
+	csvList := &unstructured.UnstructuredList{}
+	csvList.SetGroupVersionKind(schema.GroupVersionKind{
+		Group: csvGVK.Group, Version: csvGVK.Version, Kind: csvGVK.Kind + "List",
+	})
+
+	if err := r.reader.List(ctx, csvList, ctrl.InNamespace(r.namespace)); err != nil {
 		return false
 	}
 
-	csv := &unstructured.Unstructured{}
-	csv.SetGroupVersionKind(csvGVK)
+	found := false
 
-	err := r.reader.Get(ctx, types.NamespacedName{Name: r.csvName, Namespace: r.namespace}, csv)
-	if k8serrors.IsNotFound(err) {
-		return true
+	for i := range csvList.Items {
+		if strings.HasPrefix(csvList.Items[i].GetName(), operatorCSVPrefix) {
+			found = true
+
+			if csvList.Items[i].GetDeletionTimestamp() == nil {
+				return false
+			}
+		}
 	}
 
-	if err != nil {
-		return false
-	}
-
-	return csv.GetDeletionTimestamp() != nil
+	return found
 }
 
 func (r *reconciler) handleUninstall(ctx context.Context) error {
 	log.Info("Operator CSV being deleted, cleaning up console resources")
-
-	if err := r.disableConsolePlugin(ctx); err != nil {
-		return err
-	}
 
 	cp := &consolev1.ConsolePlugin{ObjectMeta: metav1.ObjectMeta{Name: pluginName}}
 	if err := r.client.Delete(ctx, cp); err != nil && !k8serrors.IsNotFound(err) {
@@ -272,39 +253,6 @@ func (r *reconciler) handleUninstall(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func (r *reconciler) disableConsolePlugin(ctx context.Context) error {
-	console := &unstructured.Unstructured{}
-	console.SetGroupVersionKind(schema.GroupVersionKind{
-		Group: "operator.openshift.io", Version: "v1", Kind: "Console",
-	})
-
-	if err := r.reader.Get(ctx, types.NamespacedName{Name: "cluster"}, console); err != nil {
-		return err
-	}
-
-	plugins, found, err := unstructured.NestedStringSlice(console.Object, "spec", "plugins")
-	if err != nil || !found {
-		return nil
-	}
-
-	filtered := make([]string, 0, len(plugins))
-	for _, p := range plugins {
-		if p != pluginName {
-			filtered = append(filtered, p)
-		}
-	}
-
-	if len(filtered) == len(plugins) {
-		return nil
-	}
-
-	if err := unstructured.SetNestedStringSlice(console.Object, filtered, "spec", "plugins"); err != nil {
-		return err
-	}
-
-	return r.client.Update(ctx, console)
 }
 
 func (r *reconciler) ensureAllResources(ctx context.Context) error {

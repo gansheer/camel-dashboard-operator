@@ -25,7 +25,7 @@ metadata:
     name: camel-monitor-operator
     app.kubernetes.io/component: operator
     app.kubernetes.io/name: camel-monitor
-    app.kubernetes.io/version: "0.3.0-test-17"
+    app.kubernetes.io/version: "0.3.0-test-24"
 spec:
   replicas: 1
   strategy:
@@ -41,12 +41,12 @@ spec:
         app: "camel-monitor"
         app.kubernetes.io/component: operator
         app.kubernetes.io/name: camel-monitor
-        app.kubernetes.io/version: "0.3.0-test-17"
+        app.kubernetes.io/version: "0.3.0-test-24"
     spec:
       serviceAccountName: camel-monitor-operator
       containers:
         - name: camel-monitor-operator
-          image: quay.io/gfournie/camel-monitor-operator:0.3.0-test-17
+          image: quay.io/gfournie/camel-monitor-operator:0.3.0-test-24
           imagePullPolicy: IfNotPresent
           command:
             - camel-monitor
