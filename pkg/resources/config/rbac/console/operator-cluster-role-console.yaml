@@ -41,3 +41,10 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - operator.openshift.io
+  resources:
+  - consoles
+  verbs:
+  - get
+  - update

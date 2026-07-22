@@ -29,6 +29,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -302,11 +304,28 @@ func TestHandleUninstall(t *testing.T) {
 			Name: pluginName,
 		},
 	}
-	r := newTestReconciler(t, cp)
+
+	console := &unstructured.Unstructured{}
+	console.SetGroupVersionKind(schema.GroupVersionKind{
+		Group: "operator.openshift.io", Version: "v1", Kind: "Console",
+	})
+	console.SetName("cluster")
+	unstructured.SetNestedStringSlice(console.Object, []string{"networking-console-plugin", pluginName}, "spec", "plugins")
+
+	r := newTestReconciler(t, cp, console)
 
 	err := r.handleUninstall(context.TODO())
 	require.NoError(t, err)
 
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pluginName}, &consolev1.ConsolePlugin{})
 	assert.True(t, k8serrors.IsNotFound(err))
+
+	updated := &unstructured.Unstructured{}
+	updated.SetGroupVersionKind(schema.GroupVersionKind{
+		Group: "operator.openshift.io", Version: "v1", Kind: "Console",
+	})
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: "cluster"}, updated)
+	require.NoError(t, err)
+	plugins, _, _ := unstructured.NestedStringSlice(updated.Object, "spec", "plugins")
+	assert.Equal(t, []string{"networking-console-plugin"}, plugins)
 }
