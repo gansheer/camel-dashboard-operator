@@ -33,7 +33,7 @@ runs:
     uses: azure/setup-kubectl@v5
   - id: minikube-start
     name: Start minikube
-    uses: medyagh/setup-minikube@v0.0.18
+    uses: medyagh/setup-minikube@v0.0.21
     with:
       addons: registry
       cpus: max
